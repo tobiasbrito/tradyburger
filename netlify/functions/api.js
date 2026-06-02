@@ -121,7 +121,94 @@ function botProductText(category) {
 function botCartSummary(cart) {
   const lines = cart.map((item) => `- ${item.quantity} x ${item.product.name} (${money(item.product.price)} c/u)`);
   const total = cart.reduce((sum, item) => sum + item.quantity * item.product.price, 0);
-  return `${lines.join("\n")}\n\nTotal estimado: ${money(total)}`;
+  return cart.length ? `${lines.join("\n")}\n\nTotal estimado: ${money(total)}` : "Todavia no agregaste productos.";
+}
+
+function normalizeText(value = "") {
+  return String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function textTokens(value = "") {
+  return normalizeText(value).split(" ").filter((token) => token.length > 1);
+}
+
+function parseYesNo(text) {
+  const normalized = normalizeText(text);
+  if (/^(si|s|dale|ok|oka|confirmo|confirmar|mandalo|listo|de una)\b/.test(normalized)) return true;
+  if (/^(no|n|cancelar|cancela|mejor no|negativo)\b/.test(normalized)) return false;
+  return null;
+}
+
+function parseQuantity(text) {
+  const normalized = normalizeText(text);
+  const words = { uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10 };
+  const number = normalized.match(/\b\d+\b/);
+  if (number) return Math.max(1, Number.parseInt(number[0], 10));
+  const word = normalized.split(" ").find((token) => words[token]);
+  return words[word] || 1;
+}
+
+function parseDeliveryType(text) {
+  const normalized = normalizeText(text);
+  if (/(envio|delivery|mandamelo|llevar|domicilio|casa)/.test(normalized)) return "envio";
+  if (/(retiro|retira|paso|local|buscar)/.test(normalized)) return "retiro";
+  return null;
+}
+
+function parsePayment(text) {
+  const normalized = normalizeText(text);
+  if (/(mercado|mp)/.test(normalized)) return "Mercado Pago";
+  if (/(trans|alias|cvu)/.test(normalized)) return "Transferencia";
+  if (/(efectivo|cash)/.test(normalized)) return "Efectivo";
+  return text.trim();
+}
+
+function productScore(product, tokens) {
+  const name = normalizeText(product.name);
+  const description = normalizeText(product.description || "");
+  return tokens.reduce((score, token) => {
+    if (name.includes(token)) return score + 4;
+    if (token.length >= 4 && description.includes(token)) return score + 1;
+    return score;
+  }, 0);
+}
+
+function findCategory(text, categories) {
+  const numeric = Number.parseInt(text, 10);
+  if (Number.isFinite(numeric) && categories[numeric - 1]) return categories[numeric - 1];
+  const normalized = normalizeText(text);
+  if (!normalized) return null;
+  return categories.find((category) => {
+    const categoryName = normalizeText(category.name);
+    return categoryName.includes(normalized) || normalized.includes(categoryName);
+  });
+}
+
+function findProduct(text, products, category) {
+  const numeric = Number.parseInt(text, 10);
+  if (Number.isFinite(numeric) && category?.items?.[numeric - 1]) return category.items[numeric - 1];
+
+  const scope = category?.items?.length ? category.items : products;
+  const ignored = new Set(["quiero", "agrega", "agregar", "sumame", "pone", "con", "una", "uno", "dos", "tres", "cuatro", "cinco"]);
+  const tokens = textTokens(text).filter((token) => !ignored.has(token));
+  if (!tokens.length) return null;
+  const matches = scope
+    .map((product) => ({ product, score: productScore(product, tokens) }))
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || a.product.name.length - b.product.name.length);
+  return matches[0]?.product || null;
+}
+
+function addToCart(cart, product, quantity) {
+  const existing = cart.find((item) => item.product.id === product.id);
+  if (existing) existing.quantity += quantity;
+  else cart.push({ product, quantity });
 }
 
 async function getBotSession(sessionId) {
@@ -268,6 +355,168 @@ async function handleBotDemo(body) {
   return { session_id: session.id, step: session.step, reply };
 }
 
+async function handleSmartBotDemo(body) {
+  const products = await getActiveProducts();
+  const categories = groupProducts(products);
+  const settings = await getSettings();
+
+  if (!body.message) {
+    const session = await getBotSession(body.session_id);
+    session.step = "category";
+    session.state = {};
+    session.cart = [];
+    session.last_message = "saludo";
+    await saveBotSession(session);
+    return {
+      session_id: session.id,
+      step: session.step,
+      reply: `Que haces! Soy Tradi, el bot de pedidos de ${settings.business_name}.\n\nTe ayudo a armar el pedido al toque. Podes escribir natural, por ejemplo: "quiero 2 chesse dobles", "ver bebidas" o "carrito".\n\nCategorias:\n${botMenuText(categories)}`,
+      categories
+    };
+  }
+
+  const session = await getBotSession(body.session_id);
+  const text = String(body.message || "").trim();
+  const normalized = normalizeText(text);
+  const state = session.state || {};
+  const cart = Array.isArray(session.cart) ? session.cart : [];
+  let reply = "";
+
+  if (["ayuda", "help"].includes(normalized)) {
+    reply = `Te doy una mano:\n- Escribi una categoria: "bebidas", "dobles", "nuggets"\n- Pedi directo: "2 chesse simple" o "una coca"\n- Escribi "carrito" para ver tu pedido\n- Escribi "menu" para volver al menu\n- Escribi "cancelar" para empezar de cero`;
+  } else if (["carrito", "pedido", "resumen"].includes(normalized)) {
+    reply = `Asi va tu pedido:\n${botCartSummary(cart)}\n\n${cart.length ? "Si esta todo, escribi no para cerrar o pedi algo mas." : "Decime que queres sumar y lo busco."}`;
+  } else if (["cancelar", "cancela", "nuevo", "reiniciar", "empezar"].includes(normalized)) {
+    session.step = "category";
+    session.state = {};
+    session.cart = [];
+    session.last_message = text;
+    await saveBotSession(session);
+    return { session_id: session.id, step: session.step, reply: `Listo, arrancamos de cero.\n\nCategorias:\n${botMenuText(categories)}` };
+  } else if (normalized === "menu" || normalized === "ver menu") {
+    session.step = "category";
+    reply = `Dale, volvemos al menu.\n\nCategorias:\n${botMenuText(categories)}`;
+  } else if (session.step === "category") {
+    const directProduct = findProduct(text, products);
+    const category = findCategory(text.replace(/^ver\s+/, ""), categories);
+    if (directProduct) {
+      const quantity = parseQuantity(text);
+      addToCart(cart, directProduct, quantity);
+      session.step = "more";
+      reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+    } else if (category) {
+      state.category = category.name;
+      session.step = "product";
+      reply = `Categoria: ${category.name}. Mira lo que tengo:\n${botProductText(category)}\n\nPodes poner el numero o escribir el nombre.`;
+    } else {
+      reply = `No encontre esa categoria, pero te sigo.\n\nPodes escribir "dobles", "bebidas", "nuggets" o pedirme directo: "quiero 2 chesse dobles".\n\nCategorias:\n${botMenuText(categories)}`;
+    }
+  } else if (session.step === "product") {
+    const category = categories.find((item) => item.name === state.category);
+    const product = findProduct(text, products, category);
+    if (!product) {
+      reply = `No encontre ese producto en ${state.category || "esta categoria"}. Probame con otro numero o escribi "menu".`;
+    } else {
+      const hasQuantity = /\b\d+\b/.test(normalized) || /(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)/.test(normalized);
+      if (hasQuantity) {
+        const quantity = parseQuantity(text);
+        addToCart(cart, product, quantity);
+        session.step = "more";
+        reply = `Listo, adentro ${quantity} x ${product.name}.\n\n${botCartSummary(cart)}\n\nSumamos algo mas o cerramos?`;
+      } else {
+        state.pending_product_id = product.id;
+        session.step = "quantity";
+        reply = `Excelente eleccion: ${product.name} (${money(product.price)}).\nCuantas unidades queres?`;
+      }
+    }
+  } else if (session.step === "quantity") {
+    const product = products.find((item) => item.id === state.pending_product_id);
+    if (!product) {
+      session.step = "category";
+      reply = `Se me perdio el producto pendiente. Arranquemos desde el menu:\n${botMenuText(categories)}`;
+    } else {
+      const quantity = parseQuantity(text);
+      addToCart(cart, product, quantity);
+      delete state.pending_product_id;
+      session.step = "more";
+      reply = `Agregado sin vueltas.\n\n${botCartSummary(cart)}\n\nQueres sumar algo mas? Pedi directo o responde "no" para cerrar.`;
+    }
+  } else if (session.step === "more") {
+    const yesNo = parseYesNo(text);
+    const directProduct = findProduct(text, products);
+    if (yesNo === true) {
+      session.step = "category";
+      reply = `De una. Elegi categoria o pedime por nombre:\n${botMenuText(categories)}`;
+    } else if (yesNo === false) {
+      session.step = "name";
+      reply = "Perfecto, cerramos el pedido. Decime el nombre del cliente.";
+    } else if (directProduct) {
+      const quantity = parseQuantity(text);
+      addToCart(cart, directProduct, quantity);
+      reply = `Sumado: ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nAlgo mas?`;
+    } else {
+      session.step = "name";
+      reply = "Perfecto, cerramos el pedido. Decime el nombre del cliente.";
+    }
+  } else if (session.step === "name") {
+    state.customer_name = text;
+    session.step = "phone";
+    reply = `Gracias, ${state.customer_name}. Pasame un telefono de contacto. Si no queres cargarlo, escribi "no".`;
+  } else if (session.step === "phone") {
+    state.customer_phone = normalized === "no" ? "" : text;
+    session.customer_phone = state.customer_phone;
+    session.step = "delivery";
+    reply = "Como lo hacemos: retiro por el local o envio?";
+  } else if (session.step === "delivery") {
+    const deliveryType = parseDeliveryType(text);
+    if (!deliveryType) {
+      reply = "No te entendi esa parte. Decime si es retiro o envio.";
+    } else if (deliveryType === "envio") {
+      state.delivery_type = "envio";
+      session.step = "address";
+      reply = "Perfecto, pasame la direccion completa para el envio.";
+    } else {
+      state.delivery_type = "retiro";
+      session.step = "payment";
+      reply = `Genial, retiro en el local: ${settings.address}.\nForma de pago: efectivo, transferencia o Mercado Pago?`;
+    }
+  } else if (session.step === "address") {
+    state.address = text;
+    session.step = "payment";
+    reply = "Direccion anotada. Forma de pago: efectivo, transferencia o Mercado Pago?";
+  } else if (session.step === "payment") {
+    state.payment_method = parsePayment(text);
+    session.step = "confirm";
+    reply = `Te dejo el resumen final:\n${botCartSummary(cart)}\n\nCliente: ${state.customer_name}\nTelefono: ${state.customer_phone || "No informado"}\nEntrega: ${state.delivery_type}\nDireccion: ${state.address || "Retiro en local"}\nPago: ${state.payment_method}\n\nConfirmas el pedido? Responde "si" para guardarlo o "no" para cancelarlo.`;
+  } else if (session.step === "confirm") {
+    if (parseYesNo(text) !== true) {
+      session.step = "done";
+      reply = "Pedido cancelado en demo. Si queres arrancar otro, escribi nuevo.";
+    } else {
+      const orderResult = await createOrderFromItems({
+        customer_name: state.customer_name,
+        customer_phone: state.customer_phone || "",
+        delivery_type: state.delivery_type,
+        address: state.address || "",
+        payment_method: state.payment_method || "Efectivo",
+        notes: "Pedido tomado por /api/bot/demo inteligente",
+        items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity }))
+      });
+      session.step = "done";
+      state.order_id = orderResult.order.id;
+      reply = `Listo, pedido guardado y listo para despacho.\n\n${orderResult.summary}\n\nSi queres armar otro pedido, escribi nuevo.`;
+    }
+  } else {
+    reply = "Esta sesion ya termino. Escribi nuevo y arrancamos otro pedido.";
+  }
+
+  session.state = state;
+  session.cart = cart;
+  session.last_message = text;
+  await saveBotSession(session);
+  return { session_id: session.id, step: session.step, reply };
+}
+
 async function createOrderFromItems(body) {
   const requestedItems = Array.isArray(body.items) ? body.items : [];
   if (!requestedItems.length) throw new Error("Order needs at least one item");
@@ -398,11 +647,11 @@ exports.handler = async (event) => {
     }
 
     if (method === "GET" && route === "bot/demo") {
-      return response(200, await handleBotDemo({}));
+      return response(200, await handleSmartBotDemo({}));
     }
 
     if (method === "POST" && route === "bot/demo") {
-      return response(200, await handleBotDemo(body));
+      return response(200, await handleSmartBotDemo(body));
     }
 
     if (method === "POST" && route === "orders") {

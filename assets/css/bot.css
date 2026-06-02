@@ -75,11 +75,33 @@ p { color: rgba(255, 255, 255, .72); }
   border: 1px solid rgba(255, 229, 0, .25);
 }
 
+.typing {
+  color: rgba(255, 255, 255, .72);
+  font-style: italic;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
 .user {
   align-self: flex-end;
   color: #110d05;
   background: var(--yellow);
   font-weight: 800;
+}
+
+.quick-replies {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 12px 12px;
+  background: rgba(0, 0, 0, .2);
+}
+
+.quick-replies button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  border: 1px solid rgba(255, 229, 0, .28);
+  color: var(--soft);
+  background: rgba(255, 229, 0, .08);
 }
 
 .composer {
@@ -111,4 +133,9 @@ button {
   background: var(--yellow);
   font-weight: 900;
   cursor: pointer;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
 }
