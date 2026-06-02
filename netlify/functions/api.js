@@ -168,6 +168,15 @@ function parseQuantity(text) {
   return words[word] || 1;
 }
 
+function parseLastQuantity(text) {
+  const normalized = normalizeText(text);
+  const words = { uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10 };
+  const numbers = normalized.match(/\b\d+\b/g);
+  if (numbers?.length) return Math.max(1, Number.parseInt(numbers[numbers.length - 1], 10));
+  const word = normalized.split(" ").reverse().find((token) => words[token]);
+  return words[word] || 1;
+}
+
 function parseDeliveryType(text) {
   const normalized = normalizeText(text);
   if (/(envio|delivery|mandamelo|llevar|domicilio|casa)/.test(normalized)) return "envio";
@@ -223,6 +232,33 @@ function addToCart(cart, product, quantity) {
   const existing = cart.find((item) => item.product.id === product.id);
   if (existing) existing.quantity += quantity;
   else cart.push({ product, quantity });
+}
+
+function handleCartCorrection(text, cart, products) {
+  const normalized = normalizeText(text);
+  const wantsCorrection = /(me equivoque|corregi|corregir|cambia|cambiar|solo quiero|no quiero|quise decir|en realidad|baja|subi|cantidad)/.test(normalized);
+  if (!wantsCorrection || !cart.length) return "";
+
+  const mentionedProduct = findProduct(text, products);
+  let item = mentionedProduct
+    ? cart.find((cartItem) => cartItem.product.id === mentionedProduct.id)
+    : cart[cart.length - 1];
+  if (!item) item = cart[cart.length - 1];
+  if (!item) return "Te sigo, pero todavia no encontre productos en tu carrito. Decime que queres pedir.";
+
+  if (/(saca|sacalo|quitar|quita|borrar|borra|eliminar|elimina)/.test(normalized) && !/(solo quiero|quiero \d|quiero una|quiero uno)/.test(normalized)) {
+    const index = cart.findIndex((cartItem) => cartItem.product.id === item.product.id);
+    cart.splice(index, 1);
+    return `Listo, saque ${item.product.name} del pedido.\n\n${botCartSummary(cart)}\n\nSeguimos?`;
+  }
+
+  const quantity = parseLastQuantity(text);
+  item.quantity = quantity;
+  return `Listo, corregido: queda ${quantity} x ${item.product.name}.\n\n${botCartSummary(cart)}\n\nAlgo mas?`;
+}
+
+function isGreeting(text) {
+  return /^(hola|buenas|buen dia|buenas tardes|buenas noches|hey|holi)\b/.test(normalizeText(text));
 }
 
 function cleanPhone(phone = "") {
@@ -534,6 +570,8 @@ async function handleSmartBotDemo(body) {
     session.last_message = text;
     await saveBotSession(session);
     return { session_id: session.id, step: session.step, reply: `Listo, arrancamos de cero.\n\nCategorias:\n${botMenuText(categories)}` };
+  } else if (isGreeting(text) && session.step === "category" && !cart.length) {
+    reply = `Hola! Soy Tradi. Te ayudo con el pedido.\n\nQueres que te pase el menu o ya sabes que vas a pedir?\n\nPodes escribir "menu", "bebidas" o directamente algo como "quiero 2 chesse simple".`;
   } else if (normalized === "menu" || normalized === "ver menu") {
     session.step = "category";
     reply = `Dale, volvemos al menu.\n\nCategorias:\n${botMenuText(categories)}`;
@@ -558,7 +596,8 @@ async function handleSmartBotDemo(body) {
     if (!product) {
       reply = `No encontre ese producto en ${state.category || "esta categoria"}. Probame con otro numero o escribi "menu".`;
     } else {
-      const hasQuantity = /\b\d+\b/.test(normalized) || /(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)/.test(normalized);
+      const isPlainProductNumber = /^\d+$/.test(normalized) && category?.items?.[Number.parseInt(normalized, 10) - 1];
+      const hasQuantity = !isPlainProductNumber && (/\b\d+\b/.test(normalized) || /(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)/.test(normalized));
       if (hasQuantity) {
         const quantity = parseQuantity(text);
         addToCart(cart, product, quantity);
@@ -584,8 +623,11 @@ async function handleSmartBotDemo(body) {
     }
   } else if (session.step === "more") {
     const yesNo = parseYesNo(text);
+    const correction = handleCartCorrection(text, cart, products);
     const directProduct = findProduct(text, products);
-    if (yesNo === true) {
+    if (correction) {
+      reply = correction;
+    } else if (yesNo === true) {
       session.step = "category";
       reply = `De una. Elegi categoria o pedime por nombre:\n${botMenuText(categories)}`;
     } else if (yesNo === false) {

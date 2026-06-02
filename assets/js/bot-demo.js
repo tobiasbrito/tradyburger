@@ -50,6 +50,11 @@ function repliesForStep(step) {
   return ["nuevo", "menu"];
 }
 
+function showStartState() {
+  setQuickReplies(["hola", "menu", "quiero 2 chesse simple", "ver bebidas"]);
+  input.focus();
+}
+
 async function sendToBot(text = "") {
   if (sending) return;
   sending = true;
@@ -85,4 +90,4 @@ quickReplies.addEventListener("click", async (event) => {
   await sendToBot(button.dataset.reply);
 });
 
-sendToBot();
+showStartState();
