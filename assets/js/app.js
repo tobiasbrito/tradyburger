@@ -104,12 +104,14 @@ function renderMenuButtons() {
 
 function openChat() {
   panel.classList.add("open");
+  document.documentElement.classList.add("chat-lock");
   chatToggle?.setAttribute("aria-expanded", "true");
   if (heroVideo && typeof heroVideo.pause === "function") heroVideo.pause();
 }
 
 function closeChat() {
   panel.classList.remove("open");
+  document.documentElement.classList.remove("chat-lock");
   chatToggle?.setAttribute("aria-expanded", "false");
   if (heroVideo && typeof heroVideo.play === "function") heroVideo.play().catch(() => {});
 }
