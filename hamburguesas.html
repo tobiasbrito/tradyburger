@@ -1,0 +1,1415 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tradi Burgerrr | Desde 2024</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --yellow: #ffe500;
+      --soft: #fff09a;
+      --dark: #070606;
+      --panel: rgba(10, 8, 6, .94);
+      --line: rgba(255, 229, 0, .28);
+      --green: #21b956;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--dark);
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .hero {
+      position: relative;
+      min-height: 94vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .hero-video,
+    .hero-fallback {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      z-index: -4;
+    }
+
+    .hero-fallback {
+      background: url("https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=2200&q=90") center / cover;
+      z-index: -5;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 18%, rgba(255, 229, 0, .32), transparent 24%),
+        linear-gradient(90deg, rgba(0, 0, 0, .92), rgba(0, 0, 0, .5) 48%, rgba(0, 0, 0, .82));
+      z-index: -2;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: linear-gradient(180deg, black, transparent 82%);
+      z-index: -1;
+    }
+
+    nav {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      min-height: 72px;
+      padding: 12px clamp(16px, 5vw, 72px);
+      background: rgba(0, 0, 0, .46);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .top-info {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      flex-wrap: wrap;
+      position: absolute;
+      left: clamp(12px, 3vw, 32px);
+      top: 10px;
+      max-width: min(54vw, 560px);
+      color: var(--soft);
+      font-size: clamp(11px, 1.1vw, 13px);
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    .top-info span {
+      padding: 5px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 229, 0, .24);
+      background: rgba(255, 229, 0, .1);
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-actions a,
+    .button,
+    .chat-toggle,
+    .chat-send {
+      border: 0;
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .nav-actions a {
+      color: white;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 13px;
+      border: 1px solid rgba(255, 255, 255, .24);
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .hero-content {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-content: center;
+      justify-items: center;
+      gap: 18px;
+      min-height: calc(94vh - 132px);
+      padding: clamp(24px, 4vw, 42px) clamp(16px, 5vw, 72px) 132px;
+      text-align: center;
+      z-index: 3;
+    }
+
+    .hero-copy {
+      display: grid;
+      justify-items: center;
+      gap: 16px;
+      max-width: 780px;
+      order: 2;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      margin: 0;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 229, 0, .14);
+      color: var(--soft);
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 780px;
+      font-size: clamp(46px, 8vw, 106px);
+      line-height: .9;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      text-shadow: 0 0 24px rgba(255, 229, 0, .3), 0 14px 18px rgba(0, 0, 0, .75);
+    }
+
+    .hero-copy p,
+    .section-head p,
+    .item p,
+    .deal p,
+    .quick-order p {
+      color: #f9dc8b;
+      font-weight: 800;
+      line-height: 1.42;
+    }
+
+    .hero-copy p {
+      max-width: 620px;
+      margin: 0;
+      font-size: clamp(18px, 2.1vw, 25px);
+    }
+
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 0;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      padding: 14px 18px;
+      color: #120d05;
+      background: var(--yellow);
+      box-shadow: 0 0 28px rgba(255, 229, 0, .42), 0 14px 24px rgba(0, 0, 0, .38);
+      text-align: center;
+      white-space: normal;
+    }
+
+    .button.secondary {
+      color: white;
+      background: rgba(255, 255, 255, .12);
+      border: 1px solid rgba(255, 255, 255, .24);
+    }
+
+    .hero-logo-wrap {
+      position: relative;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      order: 1;
+      width: min(84vw, 860px);
+    }
+
+    .hero-logo-wrap::before {
+      content: "";
+      position: absolute;
+      inset: 10% 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 229, 0, .34), rgba(255, 229, 0, .12) 38%, transparent 68%);
+      filter: blur(18px);
+      transform: rotate(-8deg);
+    }
+
+    .hero-logo {
+      position: relative;
+      width: min(100%, 780px);
+      max-height: 46vh;
+      object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(255, 229, 0, .72)) drop-shadow(0 30px 54px rgba(0, 0, 0, .86));
+      transform: rotate(-2deg);
+      animation: logoPulse 3.8s ease-in-out infinite;
+    }
+
+    .splash,
+    .ingredient {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .splash {
+      border-radius: 999px;
+      background: var(--yellow);
+      box-shadow: 0 0 22px rgba(255, 229, 0, .9);
+      opacity: .86;
+      animation: floaty 7s ease-in-out infinite;
+    }
+
+    .splash.one { width: 18px; height: 18px; left: 5%; top: 15%; }
+    .splash.two { width: 26px; height: 26px; right: 7%; top: 8%; animation-delay: -2s; }
+    .splash.three { width: 12px; height: 12px; right: 18%; bottom: 14%; animation-delay: -4s; }
+
+    .ingredient {
+      width: 82px;
+      height: 82px;
+      bottom: -120px;
+      border-radius: 999px;
+      opacity: .78;
+      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .48));
+      animation: drift 14s linear infinite;
+      z-index: 0;
+    }
+
+    .tomato { left: 8%; background: radial-gradient(circle at 34% 34%, #ff8b73, #e32420 56%, #9d0807); }
+    .lettuce { left: 46%; border-radius: 34% 66% 36% 64%; background: radial-gradient(circle, #99f06a, #34a635 70%); animation-delay: -5s; }
+    .cheddar { right: 12%; border-radius: 8px; background: linear-gradient(135deg, #ffd848, #ff9e18); animation-delay: -9s; }
+    .sauce { left: 72%; width: 46px; height: 120px; border-radius: 50%; background: linear-gradient(#fff5bd, #ffdb4a 42%, #ff421f); animation-delay: -2.8s; }
+
+    .fries-rain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+      mask-image: linear-gradient(180deg, black 0 72%, transparent 96%);
+    }
+
+    .falling-fry {
+      position: absolute;
+      top: -100px;
+      width: 18px;
+      height: 86px;
+      border-radius: 10px 10px 7px 7px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .28), transparent 24%),
+        linear-gradient(90deg, #bd6f13, #ffd966 24%, #fff1a6 51%, #e49a22 80%, #a7540e);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .45), inset 0 -10px 14px rgba(151, 72, 0, .28), inset 4px 0 7px rgba(255, 255, 255, .3);
+      opacity: .9;
+      transform: rotate(18deg);
+      animation: fryFall 7.8s linear infinite;
+    }
+
+    .falling-fry:nth-child(1) { left: 58%; animation-delay: -1.2s; }
+    .falling-fry:nth-child(2) { left: 66%; height: 72px; animation-delay: -3.8s; transform: rotate(-24deg); }
+    .falling-fry:nth-child(3) { left: 74%; height: 96px; animation-delay: -5.4s; }
+    .falling-fry:nth-child(4) { left: 82%; height: 78px; animation-delay: -2.5s; transform: rotate(36deg); }
+    .falling-fry:nth-child(5) { left: 91%; height: 88px; animation-delay: -6.8s; transform: rotate(-12deg); }
+
+    .fry-bowl {
+      position: absolute;
+      right: clamp(36px, 8vw, 130px);
+      bottom: 26px;
+      width: min(23vw, 300px);
+      height: 92px;
+      border-radius: 18px 18px 120px 120px;
+      background: linear-gradient(180deg, rgba(255, 242, 179, .96), rgba(255, 196, 42, .92) 48%, rgba(150, 70, 13, .94));
+      box-shadow: 0 0 36px rgba(255, 229, 0, .38), 0 22px 40px rgba(0, 0, 0, .52);
+      opacity: .42;
+      transform: rotate(-3deg);
+      z-index: 1;
+    }
+
+    .fry-bowl::before {
+      content: "";
+      position: absolute;
+      inset: -18px 18px auto;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #fff3a6, #f1a61f);
+      box-shadow: inset 0 -8px 18px rgba(119, 58, 9, .35);
+    }
+
+    main {
+      padding: 48px clamp(16px, 5vw, 72px) 96px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 229, 0, .14), transparent 24%),
+        linear-gradient(180deg, #100d0a, #070606);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin: 0;
+      color: white;
+      font-size: clamp(30px, 4vw, 54px);
+      letter-spacing: 0;
+    }
+
+    .section-head p { max-width: 470px; margin: 0; }
+
+    .menu,
+    .order-band {
+      display: grid;
+      gap: 18px;
+    }
+
+    .menu { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .order-band { grid-template-columns: 1fr 1fr; margin-top: 34px; }
+
+    .item,
+    .deal,
+    .quick-order {
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .08);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, .28);
+    }
+
+    .item img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    .item-content { display: grid; gap: 10px; padding: 18px; }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+
+    h3 { margin: 0; color: white; font-size: 22px; }
+    .item p { margin: 0; }
+
+    .menu-order {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 10px;
+      margin-top: 4px;
+      align-items: center;
+    }
+
+    .menu-qty {
+      min-height: 46px;
+      text-align: center;
+      padding-inline: 8px;
+      background: rgba(0, 0, 0, .22);
+    }
+
+    .add-menu {
+      min-height: 46px;
+      border: 0;
+      border-radius: 8px;
+      color: #130e05;
+      background: var(--yellow);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(255, 229, 0, .16);
+    }
+
+    .add-menu.added {
+      background: var(--green);
+      color: white;
+    }
+
+    .price {
+      flex: 0 0 auto;
+      border-radius: 8px;
+      padding: 8px 9px;
+      color: #140c04;
+      background: var(--yellow);
+      font-weight: 900;
+    }
+
+    .deal,
+    .quick-order {
+      padding: clamp(22px, 4vw, 36px);
+    }
+
+    .deal strong {
+      display: block;
+      color: var(--yellow);
+      font-size: clamp(30px, 5vw, 58px);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .quick-order .button { margin-top: 18px; }
+
+    .delivery-zone {
+      margin-top: 38px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .map-card {
+      position: relative;
+      min-height: clamp(360px, 62vw, 680px);
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .08);
+      box-shadow: 0 22px 52px rgba(0, 0, 0, .34);
+    }
+
+    .map-card iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      filter: saturate(1.08) contrast(1.08) brightness(.78);
+    }
+
+    .map-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 0 19%, rgba(255, 229, 0, .08) 20%, transparent 21%),
+        linear-gradient(180deg, rgba(0, 0, 0, .08), rgba(0, 0, 0, .38));
+    }
+
+    .radar {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(58vw, 540px);
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 229, 0, .72);
+      background: radial-gradient(circle, rgba(255, 229, 0, .2), rgba(255, 229, 0, .08) 42%, rgba(255, 229, 0, .02) 64%, transparent 70%);
+      box-shadow: 0 0 36px rgba(255, 229, 0, .35), inset 0 0 44px rgba(255, 229, 0, .16);
+      animation: radarPulse 2.8s ease-out infinite;
+    }
+
+    .radar::before,
+    .radar::after {
+      content: "";
+      position: absolute;
+      inset: 13%;
+      border-radius: inherit;
+      border: 1px solid rgba(255, 229, 0, .38);
+    }
+
+    .radar::after {
+      inset: 31%;
+    }
+
+    .radar-sweep {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(58vw, 540px);
+      aspect-ratio: 1;
+      translate: -50% -50%;
+      border-radius: 999px;
+      background: conic-gradient(from 0deg, rgba(255, 229, 0, .52), rgba(255, 229, 0, .16) 24deg, transparent 70deg);
+      mix-blend-mode: screen;
+      animation: radarSpin 4s linear infinite;
+      opacity: .75;
+    }
+
+    .map-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      translate: -50% -50%;
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .map-avatar {
+      width: clamp(72px, 12vw, 128px);
+      height: clamp(72px, 12vw, 128px);
+      object-fit: contain;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, .52);
+      border: 2px solid rgba(255, 229, 0, .78);
+      box-shadow: 0 0 30px rgba(255, 229, 0, .5), 0 18px 32px rgba(0, 0, 0, .46);
+      animation: waveTradi 2.6s ease-in-out infinite;
+    }
+
+    .map-label {
+      max-width: min(88vw, 430px);
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #120d05;
+      background: var(--yellow);
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, .34);
+    }
+
+    .zone-note {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .zone-note strong {
+      color: var(--yellow);
+      text-transform: uppercase;
+    }
+
+    .zone-note p {
+      margin: 5px 0 0;
+      color: #f9dc8b;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    @keyframes radarPulse {
+      0% { scale: .86; opacity: .95; }
+      100% { scale: 1.1; opacity: .28; }
+    }
+
+    @keyframes radarSpin {
+      to { rotate: 360deg; }
+    }
+
+    @keyframes waveTradi {
+      0%, 100% { transform: rotate(-3deg) scale(1); }
+      50% { transform: rotate(4deg) scale(1.04); }
+    }
+
+    .chat-toggle {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 20;
+      min-width: 64px;
+      min-height: 64px;
+      padding: 0 18px;
+      color: #0d0904;
+      background: var(--yellow);
+      box-shadow: 0 0 28px rgba(255, 229, 0, .45), 0 18px 36px rgba(0, 0, 0, .44);
+    }
+
+    .chat-panel {
+      position: fixed;
+      right: 20px;
+      bottom: 94px;
+      z-index: 21;
+      width: min(440px, calc(100vw - 32px));
+      max-height: min(760px, calc(100vh - 118px));
+      display: none;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .56);
+    }
+
+    .chat-panel.open {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .chat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      color: #130e05;
+      background: var(--yellow);
+      font-weight: 900;
+    }
+
+    .bot-identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .bot-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      object-fit: contain;
+      background: rgba(0, 0, 0, .16);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, .2);
+    }
+
+    .bot-name {
+      display: grid;
+      line-height: 1.05;
+    }
+
+    .bot-name strong {
+      font-size: 18px;
+    }
+
+    .bot-name small {
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .chat-close {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, .12);
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .chat-body {
+      display: grid;
+      gap: 12px;
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+      scrollbar-color: var(--yellow) rgba(255, 255, 255, .08);
+    }
+
+    .bot-line,
+    .qty-row {
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
+      border: 1px solid rgba(255, 255, 255, .12);
+    }
+
+    .bot-line {
+      padding: 11px 12px;
+      color: #fff3bd;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .qty-grid { display: grid; gap: 10px; }
+
+    .qty-row {
+      display: grid;
+      grid-template-columns: 1fr 76px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .qty-row span { display: block; color: white; font-weight: 900; }
+    .qty-row small { display: block; color: #f7d98a; font-weight: 800; }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--soft);
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      padding: 11px 12px;
+      outline: none;
+    }
+
+    input[type="number"] { text-align: center; padding-inline: 8px; }
+    textarea { min-height: 78px; resize: vertical; }
+    .address-field textarea { min-height: 112px; line-height: 1.35; }
+
+    .field-help {
+      color: #f7d98a;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+      text-transform: none;
+    }
+
+    .chat-actions {
+      position: sticky;
+      bottom: -14px;
+      display: grid;
+      gap: 10px;
+      margin: 2px -14px -14px;
+      padding: 12px 14px 14px;
+      background: linear-gradient(180deg, rgba(12, 10, 8, .58), rgba(12, 10, 8, .98) 32%);
+      border-top: 1px solid rgba(255, 229, 0, .18);
+    }
+
+    .chat-total {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      color: #0d0904;
+      background: var(--yellow);
+      font-weight: 900;
+    }
+
+    .chat-send {
+      width: 100%;
+      min-height: 50px;
+      color: white;
+      background: var(--green);
+      box-shadow: 0 12px 24px rgba(32, 180, 85, .28);
+    }
+
+    footer {
+      padding: 24px clamp(16px, 5vw, 72px);
+      color: var(--soft);
+      background: #050403;
+      border-top: 1px solid var(--line);
+      font-weight: 800;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% { transform: rotate(-2deg) scale(1); }
+      50% { transform: rotate(1deg) scale(1.035); }
+    }
+
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-22px); }
+    }
+
+    @keyframes drift {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+      12% { opacity: .82; }
+      100% { transform: translate3d(42px, -105vh, 0) rotate(360deg); opacity: 0; }
+    }
+
+    @keyframes fryFall {
+      0% { transform: translate3d(0, -120px, 0) rotate(16deg); opacity: 0; }
+      10% { opacity: .95; }
+      78% { opacity: .9; }
+      100% { transform: translate3d(-70px, 92vh, 0) rotate(210deg); opacity: 0; }
+    }
+
+    @media (max-width: 940px) {
+      .hero {
+        min-height: 100svh;
+      }
+
+      nav {
+        min-height: 116px;
+        align-items: end;
+        justify-content: center;
+        padding: 10px 14px 12px;
+      }
+
+      .top-info {
+        top: 8px;
+        left: 10px;
+        max-width: calc(100vw - 20px);
+        font-size: 10px;
+        gap: 5px;
+      }
+
+      .top-info span {
+        padding: 4px 6px;
+        border-radius: 7px;
+      }
+
+      .nav-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .nav-actions a {
+        min-height: 48px;
+        padding: 10px 8px;
+        font-size: 13px;
+      }
+
+      .hero-content,
+      .menu,
+      .order-band {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-content {
+        gap: 12px;
+        min-height: calc(100svh - 116px);
+        align-content: center;
+        padding: 18px 14px 118px;
+      }
+
+      .hero-copy {
+        max-width: 760px;
+      }
+
+      .hero-logo-wrap {
+        width: min(94vw, 620px);
+      }
+
+      .hero-logo {
+        width: min(94vw, 620px);
+        max-height: 38svh;
+      }
+
+      .hero-copy {
+        gap: 12px;
+      }
+
+      .hero-copy p {
+        max-width: 92vw;
+        font-size: 16px;
+        line-height: 1.3;
+      }
+
+      .eyebrow {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+
+      .cta-row {
+        width: calc(100vw - 28px);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .button {
+        min-height: 54px;
+        padding: 13px 10px;
+        font-size: 15px;
+      }
+
+      .menu-order {
+        grid-template-columns: 82px 1fr;
+      }
+
+      .map-card {
+        min-height: 440px;
+      }
+
+      .radar,
+      .radar-sweep {
+        width: min(86vw, 460px);
+      }
+
+      .zone-note {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head { display: grid; }
+
+      .fry-bowl {
+        width: 210px;
+        right: 24px;
+        bottom: 18px;
+        opacity: .52;
+      }
+
+    }
+
+    @media (max-width: 560px) {
+      .hero-video {
+        transform: scale(1.12);
+      }
+
+      .top-info {
+        font-size: 9px;
+      }
+
+      .top-info span {
+        padding: 4px 5px;
+      }
+
+      .hero-content { padding-bottom: 106px; }
+
+      .hero-logo {
+        max-height: 34svh;
+      }
+
+      .hero-copy p {
+        font-size: 14px;
+      }
+
+      .item-content {
+        padding: 14px;
+      }
+
+      .menu-order {
+        grid-template-columns: 76px 1fr;
+      }
+
+      .menu-qty,
+      .add-menu {
+        min-height: 48px;
+      }
+
+      .map-card {
+        min-height: 390px;
+      }
+
+      .map-label {
+        font-size: 12px;
+      }
+
+      .cta-row {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        z-index: 30;
+        padding: 8px;
+        border: 1px solid rgba(255, 229, 0, .22);
+        border-radius: 8px;
+        background: rgba(5, 4, 3, .76);
+        backdrop-filter: blur(14px);
+      }
+
+      .chat-toggle { display: none; }
+      .chat-panel {
+        right: 14px;
+        bottom: 92px;
+        width: calc(100vw - 28px);
+        max-height: calc(100svh - 112px);
+      }
+
+      .fries-rain { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-fallback" aria-hidden="true"></div>
+    <video class="hero-video" autoplay muted loop playsinline poster="assets/hero-burger-fries-uhd-poster.jpg">
+      <source src="assets/hero-burger-fries-uhd-loop.mp4" type="video/mp4">
+    </video>
+
+    <nav>
+      <div class="top-info" aria-label="Fecha, hora y ubicacion">
+        <span id="topDate">--</span>
+        <span id="topTime">--:--</span>
+        <span>Merlo, Bs. As.</span>
+      </div>
+      <div class="nav-actions">
+        <a href="#menu">Menu</a>
+        <a href="#zona">Zona</a>
+        <a href="#pedido">Pedidos</a>
+        <a href="https://wa.me/5491162588633" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+    </nav>
+
+    <section class="hero-content">
+      <div class="hero-logo-wrap">
+        <span class="splash one"></span>
+        <span class="splash two"></span>
+        <span class="splash three"></span>
+        <img class="hero-logo" src="assets/tradi-burgerrr-3d-transparent.png" alt="Logo ultra HD de Tradi Burgerrr">
+      </div>
+      <div class="hero-copy">
+        <div class="eyebrow">Desde 2024 | Smash, fuego y cheddar</div>
+        <p>Hamburguesas con carne a la plancha, cheddar explosivo, vegetales frescos y aderezos que caen como lava.</p>
+        <div class="cta-row">
+          <button class="button" type="button" data-open-chat>Armar pedido</button>
+          <a class="button secondary" href="#menu">Ver menu</a>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section id="menu">
+      <div class="section-head">
+        <h2>Menu caliente</h2>
+        <p>Carta ampliada con fotos hechas a medida para que cada producto coincida con lo que describe el menu.</p>
+      </div>
+      <div class="menu">
+        <article class="item">
+          <img alt="Tradi Clasica con una carne, cheddar y vegetales" src="assets/menu-tradi-clasica.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Tradi Clasica</h3>
+              <span class="price">$8.900</span>
+            </div>
+            <p>Medallon, cheddar, lechuga, tomate y aderezo Tradi.</p>
+            <div class="menu-order" data-menu-order="0"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Doble Burgerrr con dos carnes y panceta" src="assets/menu-doble-burgerrr.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Doble Burgerrr</h3>
+              <span class="price">$11.500</span>
+            </div>
+            <p>Doble carne, doble cheddar, panceta y cebolla caramelizada.</p>
+            <div class="menu-order" data-menu-order="1"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Triple Fuego con tres carnes cheddar y jalapenos" src="assets/menu-triple-fuego.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Triple Fuego</h3>
+              <span class="price">$14.900</span>
+            </div>
+            <p>Tres carnes, cheddar derretido, jalapenos, pickles y salsa picante.</p>
+            <div class="menu-order" data-menu-order="2"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Pollo Crispy con pollo frito y vegetales" src="assets/menu-pollo-crispy.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Pollo Crispy</h3>
+              <span class="price">$10.800</span>
+            </div>
+            <p>Pollo crispy dorado, lechuga, tomate, pickles y salsa cremosa.</p>
+            <div class="menu-order" data-menu-order="3"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Papas Tradi cargadas con cheddar y panceta" src="assets/menu-papas-tradi.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Papas Tradi</h3>
+              <span class="price">$6.900</span>
+            </div>
+            <p>Papas crocantes con cheddar caliente, panceta, verdeo y salsa Tradi.</p>
+            <div class="menu-order" data-menu-order="4"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Pancho Doble con dos salchichas cheddar panceta y salsas" src="assets/menu-pancho-doble.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Pancho Doble</h3>
+              <span class="price">$7.900</span>
+            </div>
+            <p>Doble salchicha grillada, cheddar, panceta, lluvia de verdeo y salsas.</p>
+            <div class="menu-order" data-menu-order="5"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Nuggets de pollo crocantes con salsas" src="assets/menu-nuggets-pollo.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Nuggets de Pollo</h3>
+              <span class="price">$7.500</span>
+            </div>
+            <p>Diez nuggets dorados, crocantes, con salsa cheddar y barbacoa.</p>
+            <div class="menu-order" data-menu-order="6"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Combo Tradi con hamburguesa papas y bebida" src="assets/menu-combo-tradi.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Combo Tradi</h3>
+              <span class="price">$13.200</span>
+            </div>
+            <p>Hamburguesa, papas crocantes y bebida para salir rodando feliz.</p>
+            <div class="menu-order" data-menu-order="7"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Bebidas frias cola limonada agua y naranja" src="assets/menu-bebidas.png">
+          <div class="item-content">
+            <div class="item-top">
+              <h3>Bebidas Frias</h3>
+              <span class="price">$2.800</span>
+            </div>
+            <p>Gaseosa, limonada, agua o naranja bien fria para acompanar.</p>
+            <div class="menu-order" data-menu-order="8"></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="delivery-zone" id="zona">
+      <div class="section-head">
+        <h2>Zona de despacho</h2>
+        <p>El centro de operaciones esta en Fraga 2900, Barrio San Eduardo, Merlo. El radar marca el radio principal de pedidos.</p>
+      </div>
+      <div class="map-card" aria-label="Mapa de zona de despacho Tradi Burgerrr">
+        <iframe
+          title="Mapa Fraga 2900 Barrio San Eduardo Merlo"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=Fraga%202900%20Barrio%20San%20Eduardo%20Merlo%20Buenos%20Aires&output=embed">
+        </iframe>
+        <div class="map-overlay" aria-hidden="true"></div>
+        <div class="radar" aria-hidden="true"></div>
+        <div class="radar-sweep" aria-hidden="true"></div>
+        <div class="map-center" aria-hidden="true">
+          <img class="map-avatar" src="assets/tradi-bot-avatar.png" alt="">
+          <div class="map-label">Tradi despacha desde Fraga 2900</div>
+        </div>
+      </div>
+      <div class="zone-note">
+        <div>
+          <strong>Centro: Fraga 2900 - B. San Eduardo - Merlo</strong>
+          <p>Pedidos dentro del radar: despacho normal. Fuera del radar: consultar disponibilidad y demora por WhatsApp.</p>
+        </div>
+        <a class="button" href="https://wa.me/5491162588633" target="_blank" rel="noopener">Consultar zona</a>
+      </div>
+    </section>
+
+    <section class="order-band" id="pedido">
+      <div class="deal">
+        <strong>Pedidos por WhatsApp</strong>
+        <p>El bot junta cantidades, nombre, direccion, zona, forma de pago y aclaraciones. Despues abre WhatsApp con el pedido escrito automaticamente.</p>
+      </div>
+      <div class="quick-order">
+        <h2>Bot de pedidos</h2>
+        <p>Armalo en 30 segundos y mandalo directo al numero del local.</p>
+        <button class="button" type="button" data-open-chat>Iniciar bot</button>
+      </div>
+    </section>
+  </main>
+
+  <button class="chat-toggle" type="button" data-open-chat>Pedido</button>
+  <section class="chat-panel" id="chatPanel" aria-label="Bot de pedidos">
+    <div class="chat-head">
+      <div class="bot-identity">
+        <img class="bot-avatar" src="assets/tradi-bot-avatar.png" alt="Tradi">
+        <span class="bot-name">
+          <strong>Tradi</strong>
+          <small>Bot de pedidos y despacho</small>
+        </span>
+      </div>
+      <button class="chat-close" type="button" data-close-chat aria-label="Cerrar">x</button>
+    </div>
+    <form class="chat-body" id="orderForm">
+      <div class="bot-line">Hola, soy Tradi. Agrega productos desde la carta o ajusta cantidades aca; despues preparo el WhatsApp para despacho.</div>
+      <div class="qty-grid" id="qtyGrid"></div>
+      <label>
+        Nombre
+        <input name="customer" autocomplete="name" placeholder="Tu nombre" required>
+      </label>
+      <label class="address-field">
+        Direccion de entrega
+        <textarea name="address" autocomplete="street-address" placeholder="Ej: Av. Rivadavia 1234, piso/depto, barrio, entre calles o referencia" required></textarea>
+        <span class="field-help">Pone calle, numero, barrio y una referencia para que el repartidor llegue sin vueltas.</span>
+      </label>
+      <label>
+        Forma de pago
+        <select name="payment">
+          <option>Efectivo</option>
+          <option>Transferencia</option>
+          <option>Mercado Pago</option>
+        </select>
+      </label>
+      <label>
+        Aclaraciones
+        <textarea name="notes" placeholder="Sin cebolla, extra cheddar, horario, etc."></textarea>
+      </label>
+      <div class="chat-actions">
+        <div class="chat-total">
+          <span>Total estimado</span>
+          <strong id="orderTotal">$0</strong>
+        </div>
+        <button class="chat-send" type="submit">Enviar pedido por WhatsApp</button>
+      </div>
+    </form>
+  </section>
+
+  <footer>Tradi Burgerrr - Desde 2024 - Web lista para tomar pedidos.</footer>
+
+  <script>
+    const whatsappNumber = "5491162588633";
+    const products = [
+      { name: "Tradi Clasica", price: 8900 },
+      { name: "Doble Burgerrr", price: 11500 },
+      { name: "Triple Fuego", price: 14900 },
+      { name: "Pollo Crispy", price: 10800 },
+      { name: "Papas Tradi", price: 6900 },
+      { name: "Pancho Doble", price: 7900 },
+      { name: "Nuggets de Pollo", price: 7500 },
+      { name: "Combo Tradi", price: 13200 },
+      { name: "Bebidas Frias", price: 2800 }
+    ];
+
+    const panel = document.getElementById("chatPanel");
+    const qtyGrid = document.getElementById("qtyGrid");
+    const totalEl = document.getElementById("orderTotal");
+    const form = document.getElementById("orderForm");
+    const heroVideo = document.querySelector(".hero-video");
+    const menuOrderSlots = document.querySelectorAll("[data-menu-order]");
+    const topDate = document.getElementById("topDate");
+    const topTime = document.getElementById("topTime");
+    const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+
+    function updateTopClock() {
+      const now = new Date();
+      const compact = window.matchMedia("(max-width: 560px)").matches;
+      if (topDate) {
+        topDate.textContent = new Intl.DateTimeFormat("es-AR", {
+          day: "2-digit",
+          month: compact ? "2-digit" : "long",
+          year: "numeric",
+          ...(compact ? {} : { weekday: "long" }),
+          timeZone: "America/Argentina/Buenos_Aires"
+        }).format(now);
+      }
+      if (topTime) {
+        topTime.textContent = new Intl.DateTimeFormat("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "America/Argentina/Buenos_Aires"
+        }).format(now);
+      }
+    }
+
+    updateTopClock();
+    setInterval(updateTopClock, 1000);
+
+    products.forEach((product, index) => {
+      const row = document.createElement("label");
+      row.className = "qty-row";
+      row.innerHTML = `
+        <span>${product.name}<small>${money.format(product.price)}</small></span>
+        <input type="number" min="0" max="20" value="0" name="qty-${index}" aria-label="Cantidad ${product.name}">
+      `;
+      qtyGrid.appendChild(row);
+    });
+
+    menuOrderSlots.forEach((slot) => {
+      const index = Number(slot.dataset.menuOrder);
+      const product = products[index];
+      if (!product) return;
+      slot.innerHTML = `
+        <input class="menu-qty" type="number" min="1" max="20" value="1" aria-label="Cantidad ${product.name}">
+        <button class="add-menu" type="button">Agregar</button>
+      `;
+      const qtyInput = slot.querySelector(".menu-qty");
+      const addButton = slot.querySelector(".add-menu");
+      addButton.addEventListener("click", () => {
+        const qtyToAdd = Math.max(1, Math.min(20, Number(qtyInput.value || 1)));
+        const botInput = form.elements[`qty-${index}`];
+        botInput.value = Math.min(20, Number(botInput.value || 0) + qtyToAdd);
+        updateTotal();
+        openChat();
+        addButton.textContent = "Agregado";
+        addButton.classList.add("added");
+        setTimeout(() => {
+          addButton.textContent = "Agregar";
+          addButton.classList.remove("added");
+        }, 1200);
+      });
+    });
+
+    function openChat() {
+      panel.classList.add("open");
+      if (heroVideo) heroVideo.pause();
+      if (form.elements.customer) form.elements.customer.focus();
+    }
+
+    function closeChat() {
+      panel.classList.remove("open");
+      if (heroVideo) heroVideo.play().catch(() => {});
+    }
+
+    function getQuantities() {
+      return products.map((product, index) => {
+        const input = form.elements[`qty-${index}`];
+        return { ...product, qty: Number(input.value || 0) };
+      });
+    }
+
+    function updateTotal() {
+      const total = getQuantities().reduce((sum, item) => sum + item.qty * item.price, 0);
+      totalEl.textContent = money.format(total);
+      return total;
+    }
+
+    document.querySelectorAll("[data-open-chat]").forEach((button) => button.addEventListener("click", openChat));
+    document.querySelector("[data-close-chat]").addEventListener("click", closeChat);
+    form.addEventListener("input", updateTotal);
+    updateTotal();
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const chosen = getQuantities().filter((item) => item.qty > 0);
+      if (!chosen.length) {
+        alert("Elegi al menos un producto para mandar el pedido.");
+        return;
+      }
+
+      const data = new FormData(form);
+      const customer = String(data.get("customer") || "").trim();
+      const address = String(data.get("address") || "").trim();
+      const notes = String(data.get("notes") || "").trim();
+
+      if (!customer) {
+        form.elements.customer.focus();
+        alert("Decime tu nombre para preparar el pedido.");
+        return;
+      }
+
+      if (address.length < 8) {
+        form.elements.address.focus();
+        alert("Completa mejor la direccion: calle, numero y una referencia.");
+        return;
+      }
+
+      const total = updateTotal();
+      const lines = [
+        "Hola Tradi Burgerrr, quiero hacer este pedido:",
+        "",
+        ...chosen.map((item) => `- ${item.qty} x ${item.name} (${money.format(item.price)} c/u)`),
+        "",
+        `Total estimado: ${money.format(total)}`,
+        `Nombre: ${customer}`,
+        `Direccion: ${address}`,
+        "Centro de despacho: Fraga 2900 - B. San Eduardo - Merlo",
+        "Zona: verificar dentro del radar de despacho de la pagina",
+        `Pago: ${data.get("payment")}`,
+        `Aclaraciones: ${notes || "Sin aclaraciones"}`,
+        "",
+        "Me confirman disponibilidad y demora?"
+      ];
+
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join("\n"))}`;
+      window.open(url, "_blank", "noopener");
+    });
+  </script>
+</body>
+</html>
