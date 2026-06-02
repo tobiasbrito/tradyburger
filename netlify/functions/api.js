@@ -125,7 +125,7 @@ async function getSettings() {
 }
 
 function botMenuText(categories) {
-  return categories.map((category, index) => `${index + 1}. ${category.name} (${category.items.length})`).join("\n");
+  return categories.map((category, index) => `${index + 1}. ${category.name}`).join("\n");
 }
 
 function botProductText(category) {
@@ -222,7 +222,36 @@ function findProduct(text, products, category) {
   if (Number.isFinite(numeric) && category?.items?.[numeric - 1]) return category.items[numeric - 1];
 
   const scope = category?.items?.length ? category.items : products;
-  const ignored = new Set(["quiero", "agrega", "agregar", "sumame", "pone", "con", "una", "uno", "dos", "tres", "cuatro", "cinco"]);
+  const ignored = new Set([
+    "quiero",
+    "queria",
+    "agrega",
+    "agregar",
+    "sumame",
+    "pone",
+    "dame",
+    "pedir",
+    "pedido",
+    "con",
+    "sin",
+    "solo",
+    "solamente",
+    "para",
+    "por",
+    "del",
+    "de",
+    "la",
+    "el",
+    "los",
+    "las",
+    "un",
+    "una",
+    "uno",
+    "dos",
+    "tres",
+    "cuatro",
+    "cinco"
+  ]);
   const tokens = textTokens(text).filter((token) => !ignored.has(token));
   if (!tokens.length) return null;
   const matches = scope
@@ -599,13 +628,13 @@ async function handleSmartBotDemo(body) {
       session.step = "more";
       reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
     } else {
-      reply = `No encontre esa categoria, pero te sigo.\n\nPodes escribir "dobles", "bebidas", "nuggets" o pedirme directo: "quiero 2 chesse dobles".\n\nCategorias:\n${botMenuText(categories)}`;
+      reply = `No entendi esa opcion.\n\nElegi una categoria por numero o por nombre. Por ejemplo: "2", "bebidas" o "nuggets".\n\nMenu:\n${botMenuText(categories)}`;
     }
   } else if (session.step === "product") {
     const category = categories.find((item) => item.name === state.category);
     const product = findProduct(text, products, category);
     if (!product) {
-      reply = `No encontre ese producto en ${state.category || "esta categoria"}. Probame con otro numero o escribi "menu".`;
+      reply = `No entendi que producto queres.\n\nElegi un producto por numero o escribi parte del nombre. Tambien podes escribir "menu" para volver.`;
     } else {
       const isPlainProductNumber = /^\d+$/.test(normalized) && category?.items?.[Number.parseInt(normalized, 10) - 1];
       const hasQuantity = !isPlainProductNumber && (/\b\d+\b/.test(normalized) || /(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)/.test(normalized));
@@ -649,8 +678,7 @@ async function handleSmartBotDemo(body) {
       addToCart(cart, directProduct, quantity);
       reply = `Sumado: ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nAlgo mas?`;
     } else {
-      session.step = "name";
-      reply = "Perfecto, cerramos el pedido. Decime el nombre del cliente.";
+      reply = `No entendi si queres agregar algo mas o cerrar.\n\nPodes escribir otro producto, "si" para ver el menu, "no" para cerrar, o "carrito" para revisar.`;
     }
   } else if (session.step === "name") {
     state.customer_name = text;
