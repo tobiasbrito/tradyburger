@@ -8,11 +8,51 @@ const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
 const businessName = document.getElementById("businessName");
 const modeBadge = document.getElementById("modeBadge");
+const imagePickerButton = document.getElementById("imagePickerButton");
+const imageFileInput = document.getElementById("imageFileInput");
+const imagePreview = document.getElementById("imagePreview");
 const adminKey = "tradi_admin_password";
+const fallbackImage = "../assets/tradi-burgerrr-3d-transparent.png";
 
 let adminPassword = localStorage.getItem(adminKey) || "";
 let products = [];
 let orders = [];
+
+function currentImageUrl() {
+  return productForm.elements.image_url.value.trim() || fallbackImage;
+}
+
+function updateImagePreview(src = "") {
+  imagePreview.src = src || fallbackImage;
+}
+
+function fileToImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function compressImage(file) {
+  const image = await fileToImage(file);
+  const maxSize = 1000;
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.drawImage(image, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.84);
+}
 
 function showDashboard() {
   loginPanel.classList.add("hidden");
@@ -27,6 +67,8 @@ function fillProduct(product = {}) {
   productForm.elements.image_url.value = product.image_url || product.image || "";
   productForm.elements.description.value = product.description || product.desc || "";
   productForm.elements.is_active.checked = product.is_active !== false;
+  imageFileInput.value = "";
+  updateImagePreview(currentImageUrl());
   productForm.elements.name.focus();
 }
 
@@ -34,7 +76,9 @@ function renderProducts() {
   productsTable.innerHTML = products.map((product) => `
     <tr>
       <td>
-        <img class="thumb" src="${product.image_url || product.image || "../assets/tradi-burgerrr-3d-transparent.png"}" alt="">
+        <button class="thumb-button" type="button" data-edit-image="${product.id}" aria-label="Cambiar imagen de ${product.name}">
+          <img class="thumb" src="${product.image_url || product.image || fallbackImage}" alt="">
+        </button>
         <strong>${product.name}</strong>
       </td>
       <td>${product.category || ""}</td>
@@ -88,7 +132,43 @@ document.getElementById("logoutButton").addEventListener("click", () => {
 
 document.getElementById("clearProduct").addEventListener("click", () => fillProduct());
 
+imagePickerButton.addEventListener("click", () => {
+  imageFileInput.click();
+});
+
+productForm.elements.image_url.addEventListener("input", () => {
+  updateImagePreview(currentImageUrl());
+});
+
+imageFileInput.addEventListener("change", async () => {
+  const file = imageFileInput.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("Elegí un archivo de imagen.");
+    imageFileInput.value = "";
+    return;
+  }
+  imagePickerButton.disabled = true;
+  try {
+    const dataUrl = await compressImage(file);
+    productForm.elements.image_url.value = dataUrl;
+    updateImagePreview(dataUrl);
+  } catch (error) {
+    alert("No pude cargar esa imagen. Probá con otra foto.");
+  } finally {
+    imagePickerButton.disabled = false;
+  }
+});
+
 productsTable.addEventListener("click", (event) => {
+  const imageButton = event.target.closest("[data-edit-image]");
+  if (imageButton) {
+    const product = products.find((item) => item.id === imageButton.dataset.editImage);
+    fillProduct(product);
+    scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => imageFileInput.click(), 250);
+    return;
+  }
   const button = event.target.closest("[data-edit]");
   if (!button) return;
   const product = products.find((item) => item.id === button.dataset.edit);

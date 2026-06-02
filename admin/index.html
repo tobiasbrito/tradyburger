@@ -46,8 +46,13 @@
           <label>Precio
             <input name="price" type="number" min="0" step="1" required>
           </label>
-          <label>Imagen URL
-            <input name="image_url" placeholder="assets/pxw-menu/archivo.jpg o URL externa">
+          <label class="image-picker wide">Imagen
+            <button class="image-picker__button" id="imagePickerButton" type="button" aria-label="Elegir imagen del producto">
+              <img id="imagePreview" src="../assets/tradi-burgerrr-3d-transparent.png" alt="">
+              <span>Tocar para elegir imagen de la PC</span>
+            </button>
+            <input id="imageFileInput" type="file" accept="image/*" hidden>
+            <input name="image_url" placeholder="assets/pxw-menu/archivo.jpg, URL externa o imagen cargada">
           </label>
           <label class="wide">Descripcion
             <textarea name="description"></textarea>

@@ -151,6 +151,42 @@ button.secondary {
 
 .product-form .wide { grid-column: span 4; }
 
+.image-picker {
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  align-items: end;
+}
+
+.image-picker__button {
+  position: relative;
+  min-height: 148px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(255, 229, 0, .38);
+  color: white;
+  background: rgba(0, 0, 0, .34);
+}
+
+.image-picker__button img {
+  width: 100%;
+  height: 148px;
+  display: block;
+  object-fit: cover;
+}
+
+.image-picker__button span {
+  position: absolute;
+  inset: auto 10px 10px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #120e05;
+  background: rgba(255, 229, 0, .92);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+}
+
+.image-picker input[name="image_url"] {
+  min-width: 0;
+}
+
 .check {
   display: flex;
   align-items: center;
@@ -195,7 +231,20 @@ th {
   border-radius: 8px;
   object-fit: cover;
   vertical-align: middle;
+}
+
+.thumb-button {
+  min-height: auto;
   margin-right: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  vertical-align: middle;
+}
+
+.thumb-button:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
 }
 
 .status {
@@ -219,5 +268,9 @@ th {
 
   .product-form .wide {
     grid-column: auto;
+  }
+
+  .image-picker {
+    grid-template-columns: 1fr;
   }
 }
