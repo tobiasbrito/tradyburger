@@ -4,15 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bot Demo | Tradi Burgerrr</title>
+  <script>
+    if (new URLSearchParams(location.search).has("embed")) document.documentElement.classList.add("embed");
+  </script>
   <link rel="stylesheet" href="../assets/css/bot.css">
 </head>
 <body>
   <main class="bot-shell">
     <header>
-      <img src="../assets/tradi-bot-avatar.png" alt="Tradi">
+      <img src="../assets/tradi-bot-wave.png" alt="Tradi">
       <div>
-        <h1>Tradi Bot Demo</h1>
-        <p>Simulacion de toma de pedidos con productos y precios desde la misma base.</p>
+        <h1>Tradi Bot</h1>
+        <p>Hablame y armamos el pedido con precios actualizados.</p>
       </div>
     </header>
     <section class="phone">

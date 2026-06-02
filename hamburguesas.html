@@ -523,9 +523,7 @@
     .item p { margin: 0; }
 
     .menu-order {
-      display: grid;
-      grid-template-columns: 96px 1fr;
-      gap: 10px;
+      display: flex;
       margin-top: 4px;
       align-items: center;
     }
@@ -538,6 +536,7 @@
     }
 
     .add-menu {
+      width: 100%;
       min-height: 46px;
       border: 0;
       border-radius: 8px;
@@ -779,7 +778,7 @@
       bottom: 130px;
       z-index: 50;
       width: min(440px, calc(100vw - 32px));
-      max-height: min(760px, calc(100vh - 150px));
+      height: min(740px, calc(100vh - 150px));
       display: none;
       overflow: hidden;
       border-radius: 8px;
@@ -791,6 +790,14 @@
     .chat-panel.open {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .chat-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: 0;
+      background: rgba(8, 7, 6, .94);
     }
 
     .chat-head {
@@ -1112,7 +1119,7 @@
       }
 
       .menu-order {
-        grid-template-columns: 82px 1fr;
+        display: flex;
       }
 
       .map-card {
@@ -1166,11 +1173,6 @@
         padding: 14px;
       }
 
-      .menu-order {
-        grid-template-columns: 76px 1fr;
-      }
-
-      .menu-qty,
       .add-menu {
         min-height: 48px;
       }
@@ -1214,7 +1216,8 @@
         right: 12px;
         bottom: 184px;
         width: auto;
-        max-height: calc(100svh - 208px);
+        height: calc(100svh - 208px);
+        max-height: none;
       }
 
       .fries-rain { display: none; }
@@ -1327,49 +1330,7 @@
       </div>
       <button class="chat-close" type="button" data-close-chat aria-label="Cerrar">x</button>
     </div>
-    <form class="chat-body" id="orderForm">
-      <div class="bot-line">Hola, soy Tradi. Agrega productos desde la carta o ajusta cantidades aca; despues preparo el WhatsApp para despacho.</div>
-      <div class="qty-grid" id="qtyGrid"></div>
-      <label>
-        Nombre
-        <input name="customer" autocomplete="name" placeholder="Tu nombre" required>
-      </label>
-      <label>
-        Telefono
-        <input name="phone" autocomplete="tel" placeholder="Ej: 11 6258 8633">
-      </label>
-      <label>
-        Entrega
-        <select name="delivery_type">
-          <option value="retiro">Retiro en local</option>
-          <option value="envio">Envio a domicilio</option>
-        </select>
-      </label>
-      <label class="address-field">
-        Direccion de entrega
-        <textarea name="address" autocomplete="street-address" placeholder="Ej: Av. Rivadavia 1234, piso/depto, barrio, entre calles o referencia" required></textarea>
-        <span class="field-help">Pone calle, numero, barrio y una referencia para que el repartidor llegue sin vueltas.</span>
-      </label>
-      <label>
-        Forma de pago
-        <select name="payment">
-          <option>Efectivo</option>
-          <option>Transferencia</option>
-          <option>Mercado Pago</option>
-        </select>
-      </label>
-      <label>
-        Aclaraciones
-        <textarea name="notes" placeholder="Sin cebolla, extra cheddar, horario, etc."></textarea>
-      </label>
-      <div class="chat-actions">
-        <div class="chat-total">
-          <span>Total estimado</span>
-          <strong id="orderTotal">$0</strong>
-        </div>
-        <button class="chat-send" type="submit">Enviar pedido por WhatsApp</button>
-      </div>
-    </form>
+    <iframe class="chat-frame" title="Tradi Bot de pedidos" src="bot/?embed=1"></iframe>
   </section>
 
   <footer>Tradi Burgerrr - Desde 2024 - Web lista para tomar pedidos.</footer>
