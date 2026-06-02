@@ -11,6 +11,14 @@ function response(statusCode, body) {
   return { statusCode, headers: jsonHeaders, body: JSON.stringify(body) };
 }
 
+function textResponse(statusCode, body) {
+  return {
+    statusCode,
+    headers: { "Content-Type": "text/plain", "Access-Control-Allow-Origin": "*" },
+    body: String(body || "")
+  };
+}
+
 function requireEnv() {
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -95,6 +103,12 @@ function buildWhatsAppSummary(order, items, settings) {
 async function getActiveProducts() {
   return supabase("products", {
     query: "select=*&is_active=eq.true&order=created_at.asc"
+  });
+}
+
+async function getAllProducts() {
+  return supabase("products", {
+    query: "select=*&order=created_at.asc"
   });
 }
 
@@ -211,16 +225,34 @@ function addToCart(cart, product, quantity) {
   else cart.push({ product, quantity });
 }
 
-async function getBotSession(sessionId) {
+function cleanPhone(phone = "") {
+  return String(phone).replace(/\D/g, "");
+}
+
+function isWhatsappAdmin(phone) {
+  const admins = String(process.env.WHATSAPP_ADMIN_NUMBERS || "")
+    .split(",")
+    .map(cleanPhone)
+    .filter(Boolean);
+  return admins.includes(cleanPhone(phone));
+}
+
+async function getBotSession(sessionId, customerPhone = "") {
   if (sessionId) {
     const rows = await supabase("bot_sessions", {
       query: `select=*&id=eq.${encodeURIComponent(sessionId)}&limit=1`
     });
     if (rows[0]) return rows[0];
   }
+  if (customerPhone) {
+    const rows = await supabase("bot_sessions", {
+      query: `select=*&customer_phone=eq.${encodeURIComponent(cleanPhone(customerPhone))}&order=updated_at.desc&limit=1`
+    });
+    if (rows[0]) return rows[0];
+  }
   return (await supabase("bot_sessions", {
     method: "POST",
-    body: { step: "category", state: {}, cart: [], last_message: "session_started" }
+    body: { customer_phone: cleanPhone(customerPhone), step: "category", state: {}, cart: [], last_message: "session_started" }
   }))[0];
 }
 
@@ -237,6 +269,93 @@ async function saveBotSession(session) {
     }
   });
   return rows[0];
+}
+
+function splitWhatsAppText(text) {
+  const value = String(text || "");
+  const chunks = [];
+  for (let i = 0; i < value.length; i += 3500) chunks.push(value.slice(i, i + 3500));
+  return chunks.length ? chunks : [""];
+}
+
+async function sendWhatsAppText(to, text) {
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const graphVersion = process.env.WHATSAPP_GRAPH_VERSION || "v24.0";
+  if (!token || !phoneNumberId || !to) return { sent: false, reason: "WhatsApp env vars missing" };
+
+  const results = [];
+  for (const chunk of splitWhatsAppText(text)) {
+    const res = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: cleanPhone(to),
+        type: "text",
+        text: { preview_url: false, body: chunk }
+      })
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(payload?.error?.message || `WhatsApp send ${res.status}`);
+    results.push(payload);
+  }
+  return { sent: true, results };
+}
+
+async function sendLocalNotification(text, excludePhone = "") {
+  const settings = await getSettings();
+  const notifyNumber = cleanPhone(process.env.WHATSAPP_LOCAL_NOTIFY_NUMBER || settings.whatsapp_number);
+  if (!notifyNumber || notifyNumber === cleanPhone(excludePhone)) return { sent: false, reason: "No separate notify number" };
+  return sendWhatsAppText(notifyNumber, text);
+}
+
+function extractWhatsAppMessages(body) {
+  const messages = [];
+  for (const entry of body.entry || []) {
+    for (const change of entry.changes || []) {
+      const value = change.value || {};
+      for (const message of value.messages || []) {
+        messages.push({
+          from: cleanPhone(message.from),
+          id: message.id,
+          type: message.type,
+          text: message.text?.body || ""
+        });
+      }
+    }
+  }
+  return messages;
+}
+
+function detectSupportIntent(text) {
+  return /(reclamo|queja|problema|demora|tarde|frio|fria|equivocado|mal pedido|falto|faltan|no llego|humano|persona)/.test(normalizeText(text));
+}
+
+async function handleInventoryCommand(phone, text) {
+  if (!isWhatsappAdmin(phone)) return null;
+  const normalized = normalizeText(text);
+  const deactivate = /^(sin stock|pausar|desactivar|apagar)\b/.test(normalized);
+  const activate = /^(con stock|activar|habilitar|volver stock)\b/.test(normalized);
+  if (!deactivate && !activate) return null;
+
+  const query = normalized.replace(/^(sin stock|pausar|desactivar|apagar|con stock|activar|habilitar|volver stock)\s*/, "");
+  if (!query) return "Decime que producto queres cambiar. Ejemplo: sin stock chesse simple";
+
+  const products = activate ? await getAllProducts() : await getActiveProducts();
+  const product = findProduct(query, products);
+  if (!product) return `No encontre "${query}". Probame con parte del nombre exacto del producto.`;
+
+  const updated = await supabase("products", {
+    method: "PATCH",
+    query: `id=eq.${encodeURIComponent(product.id)}`,
+    body: { is_active: activate }
+  });
+  const status = activate ? "activado" : "desactivado";
+  return `${updated[0]?.name || product.name} queda ${status}. La web y el bot ya toman este cambio.`;
 }
 
 async function handleBotDemo(body) {
@@ -359,12 +478,15 @@ async function handleSmartBotDemo(body) {
   const products = await getActiveProducts();
   const categories = groupProducts(products);
   const settings = await getSettings();
+  const channel = body.channel || "demo";
+  const customerPhone = cleanPhone(body.customer_phone || "");
 
   if (!body.message) {
-    const session = await getBotSession(body.session_id);
+    const session = await getBotSession(body.session_id, customerPhone);
     session.step = "category";
     session.state = {};
     session.cart = [];
+    session.customer_phone = customerPhone || session.customer_phone || "";
     session.last_message = "saludo";
     await saveBotSession(session);
     return {
@@ -375,12 +497,31 @@ async function handleSmartBotDemo(body) {
     };
   }
 
-  const session = await getBotSession(body.session_id);
+  const session = await getBotSession(body.session_id, customerPhone);
   const text = String(body.message || "").trim();
   const normalized = normalizeText(text);
   const state = session.state || {};
   const cart = Array.isArray(session.cart) ? session.cart : [];
   let reply = "";
+  if (customerPhone) session.customer_phone = customerPhone;
+
+  const inventoryReply = await handleInventoryCommand(customerPhone, text);
+  if (inventoryReply) {
+    session.last_message = text;
+    await saveBotSession(session);
+    return { session_id: session.id, step: session.step, reply: inventoryReply };
+  }
+
+  if (channel === "whatsapp" && detectSupportIntent(text) && session.step === "category") {
+    await sendLocalNotification(`Atencion/reclamo por WhatsApp\nCliente: ${customerPhone || "sin telefono"}\nMensaje: ${text}`, customerPhone).catch(() => null);
+    session.last_message = text;
+    await saveBotSession(session);
+    return {
+      session_id: session.id,
+      step: session.step,
+      reply: "Te escucho. Ya avise al local para que lo revisen. Contame con mas detalle que paso y, si es sobre un pedido, pasame nombre o direccion."
+    };
+  }
 
   if (["ayuda", "help"].includes(normalized)) {
     reply = `Te doy una mano:\n- Escribi una categoria: "bebidas", "dobles", "nuggets"\n- Pedi directo: "2 chesse simple" o "una coca"\n- Escribi "carrito" para ver tu pedido\n- Escribi "menu" para volver al menu\n- Escribi "cancelar" para empezar de cero`;
@@ -460,8 +601,15 @@ async function handleSmartBotDemo(body) {
     }
   } else if (session.step === "name") {
     state.customer_name = text;
-    session.step = "phone";
-    reply = `Gracias, ${state.customer_name}. Pasame un telefono de contacto. Si no queres cargarlo, escribi "no".`;
+    if (channel === "whatsapp" && customerPhone) {
+      state.customer_phone = customerPhone;
+      session.customer_phone = customerPhone;
+      session.step = "delivery";
+      reply = `Gracias, ${state.customer_name}. Como lo hacemos: retiro por el local o envio?`;
+    } else {
+      session.step = "phone";
+      reply = `Gracias, ${state.customer_name}. Pasame un telefono de contacto. Si no queres cargarlo, escribi "no".`;
+    }
   } else if (session.step === "phone") {
     state.customer_phone = normalized === "no" ? "" : text;
     session.customer_phone = state.customer_phone;
@@ -499,12 +647,17 @@ async function handleSmartBotDemo(body) {
         delivery_type: state.delivery_type,
         address: state.address || "",
         payment_method: state.payment_method || "Efectivo",
-        notes: "Pedido tomado por /api/bot/demo inteligente",
+        notes: channel === "whatsapp" ? "Pedido tomado por WhatsApp Bot" : "Pedido tomado por /api/bot/demo inteligente",
         items: cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity }))
       });
       session.step = "done";
       state.order_id = orderResult.order.id;
-      reply = `Listo, pedido guardado y listo para despacho.\n\n${orderResult.summary}\n\nSi queres armar otro pedido, escribi nuevo.`;
+      if (channel === "whatsapp") {
+        await sendLocalNotification(orderResult.summary, customerPhone).catch(() => null);
+        reply = `Listo, ${state.customer_name}. Tu pedido quedo guardado.\n\nTotal: ${money(orderResult.order.total)}\nEstado: pendiente\n\nEl local ya recibio el resumen para prepararlo. Si queres armar otro pedido, escribi nuevo.`;
+      } else {
+        reply = `Listo, pedido guardado y listo para despacho.\n\n${orderResult.summary}\n\nSi queres armar otro pedido, escribi nuevo.`;
+      }
     }
   } else {
     reply = "Esta sesion ya termino. Escribi nuevo y arrancamos otro pedido.";
@@ -515,6 +668,43 @@ async function handleSmartBotDemo(body) {
   session.last_message = text;
   await saveBotSession(session);
   return { session_id: session.id, step: session.step, reply };
+}
+
+async function handleWhatsAppWebhook(event) {
+  if (event.httpMethod === "GET") {
+    const params = event.queryStringParameters || {};
+    const mode = params["hub.mode"];
+    const token = params["hub.verify_token"];
+    const challenge = params["hub.challenge"];
+    if (mode === "subscribe" && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+      return textResponse(200, challenge);
+    }
+    return textResponse(403, "Invalid verify token");
+  }
+
+  const body = event.body ? JSON.parse(event.body) : {};
+  const messages = extractWhatsAppMessages(body);
+  const results = [];
+
+  for (const message of messages) {
+    if (!message.from) continue;
+    if (message.type !== "text") {
+      const reply = "Por ahora puedo leer mensajes de texto. Escribime el pedido y te ayudo.";
+      await sendWhatsAppText(message.from, reply).catch(() => null);
+      results.push({ from: message.from, type: message.type, reply });
+      continue;
+    }
+
+    const bot = await handleSmartBotDemo({
+      channel: "whatsapp",
+      customer_phone: message.from,
+      message: message.text
+    });
+    await sendWhatsAppText(message.from, bot.reply);
+    results.push({ from: message.from, message_id: message.id, step: bot.step, reply: bot.reply });
+  }
+
+  return response(200, { ok: true, processed: results.length, results });
 }
 
 async function createOrderFromItems(body) {
@@ -652,6 +842,19 @@ exports.handler = async (event) => {
 
     if (method === "POST" && route === "bot/demo") {
       return response(200, await handleSmartBotDemo(body));
+    }
+
+    if ((method === "GET" || method === "POST") && route === "whatsapp/webhook") {
+      return handleWhatsAppWebhook(event);
+    }
+
+    if (method === "POST" && route === "whatsapp/test") {
+      if (!isAdmin(event)) return response(401, { error: "Admin password required" });
+      return response(200, await handleSmartBotDemo({
+        channel: "whatsapp",
+        customer_phone: body.from || "5491100000000",
+        message: body.message || "hola"
+      }));
     }
 
     if (method === "POST" && route === "orders") {

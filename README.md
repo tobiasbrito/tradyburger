@@ -32,9 +32,16 @@ Configurar:
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ADMIN_PASSWORD=una-clave-segura
+WHATSAPP_VERIFY_TOKEN=un-token-privado-para-validar-webhook
+WHATSAPP_ACCESS_TOKEN=token-de-meta-cloud-api
+WHATSAPP_PHONE_NUMBER_ID=id-del-numero-de-whatsapp-en-meta
+WHATSAPP_GRAPH_VERSION=v24.0
+WHATSAPP_ADMIN_NUMBERS=5491162588633
+WHATSAPP_LOCAL_NOTIFY_NUMBER=5491162588633
 ```
 
 No poner `SUPABASE_SERVICE_ROLE_KEY` en frontend. Solo se usa en Netlify Functions.
+Tampoco exponer `WHATSAPP_ACCESS_TOKEN`: solo se usa en Netlify Functions.
 
 ## Desarrollo local
 
@@ -63,6 +70,39 @@ El precio actualizado sale de la misma fuente de datos.
 - `GET /api/orders`: pedidos, requiere header `x-admin-password`.
 - `GET /api/bot/demo`: inicia una sesion demo del bot.
 - `POST /api/bot/demo`: avanza conversacion demo del bot.
+- `GET /api/whatsapp/webhook`: verificacion de webhook para Meta WhatsApp Cloud API.
+- `POST /api/whatsapp/webhook`: recibe mensajes reales de WhatsApp.
+- `POST /api/whatsapp/test`: prueba el mismo bot en modo WhatsApp sin enviar mensajes reales, requiere `x-admin-password`.
+
+## WhatsApp Cloud API
+
+El bot de WhatsApp usa el mismo motor que `/bot` y la misma base de datos Supabase:
+
+- Lee productos activos desde `products`.
+- Guarda pedidos en `orders` y `order_items`.
+- Mantiene conversaciones por telefono en `bot_sessions`.
+- Si un producto se desactiva desde `/admin`, deja de aparecer en la web y en WhatsApp.
+
+Webhook para configurar en Meta:
+
+```txt
+https://tradyburger.netlify.app/api/whatsapp/webhook
+```
+
+El `Verify token` debe ser el mismo valor que `WHATSAPP_VERIFY_TOKEN` en Netlify.
+
+Comandos internos de stock, solo para telefonos incluidos en `WHATSAPP_ADMIN_NUMBERS`:
+
+```txt
+sin stock chesse simple
+desactivar coca 1.75
+activar chesse simple
+con stock nuggets
+```
+
+Esto cambia `is_active` del producto en Supabase, por lo que impacta automaticamente en web publica, panel admin y bot.
+
+El bot tambien detecta mensajes de reclamo o problema en WhatsApp y notifica al local si `WHATSAPP_LOCAL_NOTIFY_NUMBER` esta configurado.
 
 ## Deploy
 
