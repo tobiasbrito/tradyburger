@@ -727,22 +727,59 @@
       position: fixed;
       right: 20px;
       bottom: 20px;
-      z-index: 20;
-      min-width: 64px;
-      min-height: 64px;
-      padding: 0 18px;
+      z-index: 45;
+      width: 106px;
+      height: 106px;
+      display: grid;
+      place-items: center;
+      padding: 0;
       color: #0d0904;
-      background: var(--yellow);
-      box-shadow: 0 0 28px rgba(255, 229, 0, .45), 0 18px 36px rgba(0, 0, 0, .44);
+      border: 1px solid rgba(255, 229, 0, .64);
+      border-radius: 999px;
+      background: radial-gradient(circle at 50% 42%, rgba(255, 229, 0, .86), rgba(255, 229, 0, .28) 45%, rgba(6, 5, 3, .9) 76%);
+      box-shadow: 0 0 28px rgba(255, 229, 0, .54), 0 18px 36px rgba(0, 0, 0, .44);
+      isolation: isolate;
+      overflow: visible;
+      animation: chatFloat 4.2s ease-in-out infinite;
+    }
+
+    .chat-toggle::before,
+    .chat-toggle::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      z-index: -1;
+      border-radius: inherit;
+      border: 1px solid rgba(255, 229, 0, .46);
+      animation: chatRadar 2.6s ease-out infinite;
+    }
+
+    .chat-toggle::after {
+      inset: -17px;
+      animation-delay: .9s;
+    }
+
+    .chat-toggle img {
+      width: 92px;
+      height: 92px;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 14px rgba(0, 0, 0, .42));
+      animation: botWave 1.9s ease-in-out infinite;
+      transform-origin: 38% 82%;
+    }
+
+    .chat-toggle:focus-visible {
+      outline: 3px solid white;
+      outline-offset: 7px;
     }
 
     .chat-panel {
       position: fixed;
       right: 20px;
-      bottom: 94px;
-      z-index: 21;
+      bottom: 130px;
+      z-index: 50;
       width: min(440px, calc(100vw - 32px));
-      max-height: min(760px, calc(100vh - 118px));
+      max-height: min(760px, calc(100vh - 150px));
       display: none;
       overflow: hidden;
       border-radius: 8px;
@@ -926,6 +963,22 @@
     @keyframes floaty {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-22px); }
+    }
+
+    @keyframes chatFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes chatRadar {
+      0% { transform: scale(.82); opacity: .8; }
+      100% { transform: scale(1.22); opacity: 0; }
+    }
+
+    @keyframes botWave {
+      0%, 100% { transform: rotate(-2deg) scale(1); }
+      45% { transform: rotate(5deg) scale(1.05); }
+      68% { transform: rotate(-4deg) scale(1.02); }
     }
 
     @keyframes drift {
@@ -1144,12 +1197,24 @@
         backdrop-filter: blur(14px);
       }
 
-      .chat-toggle { display: none; }
-      .chat-panel {
-        right: 14px;
+      .chat-toggle {
+        right: 12px;
         bottom: 92px;
-        width: calc(100vw - 28px);
-        max-height: calc(100svh - 112px);
+        width: 82px;
+        height: 82px;
+      }
+
+      .chat-toggle img {
+        width: 72px;
+        height: 72px;
+      }
+
+      .chat-panel {
+        left: 12px;
+        right: 12px;
+        bottom: 184px;
+        width: auto;
+        max-height: calc(100svh - 208px);
       }
 
       .fries-rain { display: none; }
@@ -1248,11 +1313,13 @@
     </section>
   </main>
 
-  <button class="chat-toggle" type="button" data-open-chat>Pedido</button>
+  <button class="chat-toggle" type="button" data-toggle-chat aria-label="Abrir o cerrar el bot de pedidos" aria-controls="chatPanel" aria-expanded="false">
+    <img src="assets/tradi-bot-wave.png" alt="">
+  </button>
   <section class="chat-panel" id="chatPanel" aria-label="Bot de pedidos">
     <div class="chat-head">
       <div class="bot-identity">
-        <img class="bot-avatar" src="assets/tradi-bot-avatar.png" alt="Tradi">
+        <img class="bot-avatar" src="assets/tradi-bot-wave.png" alt="Tradi">
         <span class="bot-name">
           <strong>Tradi</strong>
           <small>Bot de pedidos y despacho</small>

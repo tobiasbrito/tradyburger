@@ -1,6 +1,7 @@
 import { createOrder, getMenu, money } from "./store.js";
 
 const panel = document.getElementById("chatPanel");
+const chatToggle = document.querySelector("[data-toggle-chat]");
 const qtyGrid = document.getElementById("qtyGrid");
 const totalEl = document.getElementById("orderTotal");
 const form = document.getElementById("orderForm");
@@ -51,7 +52,6 @@ function renderMenu(categories) {
   categories.forEach((category, categoryIndex) => {
     const detail = document.createElement("details");
     detail.className = "menu-category";
-    if (categoryIndex === 0) detail.open = true;
 
     const summary = document.createElement("summary");
     summary.innerHTML = `<span>${category.name}</span><small>${category.items.length} productos</small>`;
@@ -128,13 +128,20 @@ function renderMenuButtons() {
 
 function openChat() {
   panel.classList.add("open");
+  chatToggle?.setAttribute("aria-expanded", "true");
   if (heroVideo && typeof heroVideo.pause === "function") heroVideo.pause();
   if (form.elements.customer) form.elements.customer.focus();
 }
 
 function closeChat() {
   panel.classList.remove("open");
+  chatToggle?.setAttribute("aria-expanded", "false");
   if (heroVideo && typeof heroVideo.play === "function") heroVideo.play().catch(() => {});
+}
+
+function toggleChat() {
+  if (panel.classList.contains("open")) closeChat();
+  else openChat();
 }
 
 function getQuantities() {
@@ -205,6 +212,7 @@ async function boot() {
   updateTopClock();
   setInterval(updateTopClock, 1000);
   document.querySelectorAll("[data-open-chat]").forEach((button) => button.addEventListener("click", openChat));
+  chatToggle?.addEventListener("click", toggleChat);
   document.querySelector("[data-close-chat]").addEventListener("click", closeChat);
   form.addEventListener("input", updateTotal);
   form.addEventListener("submit", submitOrder);
