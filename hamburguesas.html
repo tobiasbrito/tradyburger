@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -376,6 +376,110 @@
 
     .menu { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .order-band { grid-template-columns: 1fr 1fr; margin-top: 34px; }
+
+    .menu-cascade {
+      display: grid;
+      gap: 14px;
+    }
+
+    .menu-category {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .075);
+      box-shadow: 0 18px 38px rgba(0, 0, 0, .24);
+    }
+
+    .menu-category summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 64px;
+      padding: 16px 18px;
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      list-style: none;
+      background: linear-gradient(90deg, rgba(255, 229, 0, .18), rgba(0, 0, 0, .18));
+    }
+
+    .menu-category summary::-webkit-details-marker { display: none; }
+
+    .menu-category summary span {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-category summary span::before {
+      content: "+";
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: #120e05;
+      background: var(--yellow);
+    }
+
+    .menu-category[open] summary span::before { content: "-"; }
+
+    .menu-category summary small {
+      flex: 0 0 auto;
+      color: var(--soft);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .cascade-products {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: rgba(255, 229, 0, .12);
+    }
+
+    .cascade-product {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 14px;
+      padding: 14px;
+      background: rgba(8, 7, 6, .92);
+    }
+
+    .cascade-product img {
+      width: 112px;
+      height: 112px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .cascade-info {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .cascade-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cascade-top h3 {
+      font-size: 18px;
+      line-height: 1.12;
+    }
+
+    .cascade-info p {
+      margin: 0;
+      color: rgba(255, 255, 255, .72);
+      font-size: 14px;
+      line-height: 1.35;
+    }
 
     .item,
     .deal,
@@ -877,6 +981,7 @@
 
       .hero-content,
       .menu,
+      .cascade-products,
       .order-band {
         grid-template-columns: 1fr;
       }
@@ -903,6 +1008,30 @@
 
       .hero-copy {
         gap: 12px;
+      }
+
+      .cascade-product {
+        grid-template-columns: 96px 1fr;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .cascade-product img {
+        width: 96px;
+        height: 96px;
+      }
+
+      .cascade-top {
+        display: grid;
+        gap: 6px;
+      }
+
+      .cascade-top .price {
+        width: fit-content;
+      }
+
+      .cascade-info p {
+        font-size: 13px;
       }
 
       .hero-copy p {
@@ -1069,203 +1198,10 @@
   <main>
     <section id="menu">
       <div class="section-head">
-        <h2>Carta Tradi</h2>
-        <p>Seleccion basada en la carta actual de Tradiburger, con fotos premium hechas a medida para mostrar mejor cada producto.</p>
+        <h2>Menu completo</h2>
+        <p>Carta completa tomada de la pagina actual de Tradiburger, organizada en cascada con precios reales y fotos correspondientes a cada producto.</p>
       </div>
-      <div class="menu">
-        <article class="item">
-          <img alt="Cheese doble con dos carnes y cheddar" src="assets/menu-cheese-doble-ai.png">
-          <div class="item-content">
-            <span class="item-category">Doble</span>
-            <div class="item-top">
-              <h3>Cheese doble</h3>
-              <span class="price">$11.200</span>
-            </div>
-            <p>Pan de papa, dos medallones de carne, cheddar y salsa.</p>
-            <div class="menu-order" data-menu-order="0"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="TR Tradi triple con tres carnes cheddar panceta y cebolla" src="assets/menu-tr-tradi-triple-ai.png">
-          <div class="item-content">
-            <span class="item-category">Triple</span>
-            <div class="item-top">
-              <h3>TR Tradi triple</h3>
-              <span class="price">$14.300</span>
-            </div>
-            <p>Tres medallones, cheddar, bacon, cebolla caramelizada y salsa Tradi.</p>
-            <div class="menu-order" data-menu-order="1"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Big Tradi de la casa con doble carne vegetales y salsa" src="assets/menu-big-tradi-ai.png">
-          <div class="item-content">
-            <span class="item-category">De la casa</span>
-            <div class="item-top">
-              <h3>Big Tradi doble</h3>
-              <span class="price">$11.800</span>
-            </div>
-            <p>Doble carne, cheddar, lechuga, tomate, pickles y salsa de la casa.</p>
-            <div class="menu-order" data-menu-order="2"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Super Bacon doble con bacon crocante y cheddar" src="assets/menu-super-bacon-ai.png">
-          <div class="item-content">
-            <span class="item-category">Bacon</span>
-            <div class="item-top">
-              <h3>Super Bacon doble</h3>
-              <span class="price">$11.800</span>
-            </div>
-            <p>Doble medallon, cheddar, bacon crocante y salsa ahumada.</p>
-            <div class="menu-order" data-menu-order="3"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Mega Bacon Egg triple con cheddar bacon y huevo" src="assets/menu-triple-fuego.png">
-          <div class="item-content">
-            <span class="item-category">Triple</span>
-            <div class="item-top">
-              <h3>Mega Bacon EGG triple</h3>
-              <span class="price">$14.500</span>
-            </div>
-            <p>Tres carnes, cheddar, bacon, huevo y salsa para fanas de lo potente.</p>
-            <div class="menu-order" data-menu-order="4"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Burguer cebolla caramelizada doble con cheddar" src="assets/menu-doble-burgerrr.png">
-          <div class="item-content">
-            <span class="item-category">Doble</span>
-            <div class="item-top">
-              <h3>Cebolla caramelizada doble</h3>
-              <span class="price">$11.800</span>
-            </div>
-            <p>Doble carne, cheddar, cebolla caramelizada y salsa intensa.</p>
-            <div class="menu-order" data-menu-order="5"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Cuarto de libra doble con cheddar" src="assets/menu-tradi-clasica.png">
-          <div class="item-content">
-            <span class="item-category">Doble</span>
-            <div class="item-top">
-              <h3>Cuarto de Libra doble</h3>
-              <span class="price">$11.500</span>
-            </div>
-            <p>Doble medallon, cheddar, pepinos, ketchup y mostaza clasica.</p>
-            <div class="menu-order" data-menu-order="6"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Tasty Tradi triple con cheddar y salsa tasty" src="assets/menu-combo-tradi.png">
-          <div class="item-content">
-            <span class="item-category">Triple</span>
-            <div class="item-top">
-              <h3>Tasty Tradi triple</h3>
-              <span class="price">$14.000</span>
-            </div>
-            <p>Tres carnes, cheddar, cebolla, salsa tasty y pan de papa.</p>
-            <div class="menu-order" data-menu-order="7"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Whopper doble con vegetales frescos y cheddar" src="assets/menu-pollo-crispy.png">
-          <div class="item-content">
-            <span class="item-category">Doble</span>
-            <div class="item-top">
-              <h3>Whopper doble</h3>
-              <span class="price">$11.800</span>
-            </div>
-            <p>Doble carne, cheddar, lechuga, tomate, cebolla y salsa.</p>
-            <div class="menu-order" data-menu-order="8"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Sandwich de pollo con milanesa lechuga y tomate" src="assets/menu-pancho-doble.png">
-          <div class="item-content">
-            <span class="item-category">Pollo</span>
-            <div class="item-top">
-              <h3>Sandwich de Pollo</h3>
-              <span class="price">$9.000</span>
-            </div>
-            <p>Pan de papa, milanesa de pollo, lechuga, tomate y aderezos.</p>
-            <div class="menu-order" data-menu-order="9"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Nuggets de pollo con papas y dips" src="assets/menu-nuggets-papas-ai.png">
-          <div class="item-content">
-            <span class="item-category">Nuggets</span>
-            <div class="item-top">
-              <h3>Nuggets x10 + dips</h3>
-              <span class="price">$6.000</span>
-            </div>
-            <p>Diez nuggets dorados con dips de ketchup y mayonesa.</p>
-            <div class="menu-order" data-menu-order="10"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Nuggets con papas y bebida kids" src="assets/menu-nuggets-pollo.png">
-          <div class="item-content">
-            <span class="item-category">Kids</span>
-            <div class="item-top">
-              <h3>Nuggets kids</h3>
-              <span class="price">$8.500</span>
-            </div>
-            <p>Diez nuggets de pollo, papas y Baggio de 200ml.</p>
-            <div class="menu-order" data-menu-order="11"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Bandeja de papas grandes crocantes" src="assets/menu-papas-tradi.png">
-          <div class="item-content">
-            <span class="item-category">Papas</span>
-            <div class="item-top">
-              <h3>Band de papas grande</h3>
-              <span class="price">$5.000</span>
-            </div>
-            <p>Bandeja grande de papas crocantes para sumar al pedido.</p>
-            <div class="menu-order" data-menu-order="12"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Combo doble con lata de coca y papas" src="assets/menu-bebidas.png">
-          <div class="item-content">
-            <span class="item-category">Combo</span>
-            <div class="item-top">
-              <h3>Combo doble x1 lata coca</h3>
-              <span class="price">$12.500</span>
-            </div>
-            <p>Cheese doble, bandeja de papas y lata de Coca-Cola.</p>
-            <div class="menu-order" data-menu-order="13"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Combo familiar con cuatro hamburguesas papas y gaseosa" src="assets/menu-combo-familiar-ai.png">
-          <div class="item-content">
-            <span class="item-category">Familiar</span>
-            <div class="item-top">
-              <h3>Tradicombo familiar x4</h3>
-              <span class="price">$30.000</span>
-            </div>
-            <p>Cuatro cheese dobles, cuatro papas y gaseosa grande.</p>
-            <div class="menu-order" data-menu-order="14"></div>
-          </div>
-        </article>
-        <article class="item">
-          <img alt="Bebidas frias variadas" src="assets/menu-bebidas.png">
-          <div class="item-content">
-            <span class="item-category">Bebidas</span>
-            <div class="item-top">
-              <h3>Coca 1.75L</h3>
-              <span class="price">$5.000</span>
-            </div>
-            <p>Gaseosa fria de 1.75 litros para acompanar combos y promos.</p>
-            <div class="menu-order" data-menu-order="15"></div>
-          </div>
-        </article>
-      </div>
+      <div class="menu-cascade" id="menuCascade"></div>
     </section>
 
     <section class="delivery-zone" id="zona">
@@ -1360,40 +1296,25 @@
 
   <script>
     const whatsappNumber = "5491162588633";
-    const products = [
-      { name: "Cheese doble", price: 11200 },
-      { name: "TR Tradi triple", price: 14300 },
-      { name: "Big Tradi doble", price: 11800 },
-      { name: "Super Bacon doble", price: 11800 },
-      { name: "Mega Bacon EGG triple", price: 14500 },
-      { name: "Cebolla caramelizada doble", price: 11800 },
-      { name: "Cuarto de Libra doble", price: 11500 },
-      { name: "Tasty Tradi triple", price: 14000 },
-      { name: "Whopper doble", price: 11800 },
-      { name: "Sandwich de Pollo", price: 9000 },
-      { name: "Nuggets x10 + dips", price: 6000 },
-      { name: "Nuggets kids", price: 8500 },
-      { name: "Band de papas grande", price: 5000 },
-      { name: "Combo doble x1 lata coca", price: 12500 },
-      { name: "Tradicombo familiar x4", price: 30000 },
-      { name: "Coca 1.75L", price: 5000 }
-    ];
+    const menuCategories = [{"name":"Bandeja extra cheddar tradi","items":[{"name":"Bandeja extra cheddar tradi","price":31000,"image":"assets/pxw-menu/1308_1772666073_52G.jpg","desc":"3 Cheese dobles +papas con cheddar y bacon + 6 nuggets."}]},{"name":"Simples","items":[{"name":"Chesse simple","price":9000,"image":"assets/pxw-menu/1308_1777858221_25G.jpg","desc":"Pan de papa, medallón de carne x1, cheddar x2. Bandejita de papa x1"},{"name":"TR tradi simple","price":10000,"image":"assets/pxw-menu/1308_1777764069_34G.png","desc":"Pan de papa, medallon de carne x1, cheddar x2, barbacoa, cebolla crispy y bacon. Papa x1"},{"name":"Big tradi De la casa simple","price":9500,"image":"assets/pxw-menu/1308_1777764253_88G.png","desc":"Pan de papa , medallon de carne x1, cheddar, salsa big tradi, lechuga, bacon y cebolla morada. Bandejita de papa x1"},{"name":"Stacker Tradi simple","price":10100,"image":"assets/pxw-menu/1308_1777855789_20G.png","desc":"Pan de papa, medallon de carne x1 , cheddar , cebolla caramelizada, bacon y salsa stackerBandejita de papa x1"},{"name":"Burguer Cebolla Caramelizada simple","price":9500,"image":"assets/pxw-menu/1308_1777764778_56G.png","desc":"Pan de papa, medallón de carne, cheddar x2, cebolla caramelizada y huevo. Bandejita de papa x1"},{"name":"Cuarto de Libra simple","price":9000,"image":"assets/pxw-menu/1308_1777855920_39G.png","desc":"Pan de papa, medallon de carne, cheddar ×2, salsa de cuarto de libra. Bandejita de papa x1"},{"name":"Mega bacon (EGG) simple","price":9900,"image":"assets/pxw-menu/1308_1777858461_59G.jpg","desc":"Pan de papa, medallon de carne, cheddar x2, super bacon y huevo ala plancha. Bandejita de papa x1"},{"name":"Super Bacon simple","price":9500,"image":"assets/pxw-menu/1308_1777764812_73G.png","desc":"Pan de papa, medallón de carne x1, cheddar x2, superbacon. Bandejita de papa x1"},{"name":"Tasty Tradi simple","price":9500,"image":"assets/pxw-menu/1308_1777856299_82G.png","desc":"Pan de papa, medallón de carne, cheddar x2, lechuga, tomate, cebolla, salsa tasty. Bandejita de papa x1"},{"name":"Tasty Tradi Cuarto simple","price":9000,"image":"assets/pxw-menu/1308_1777858275_30G.jpg","desc":"Pan de papa, medallónde carne, cheddar x2, salsa cuarto de libra, salsa tastyBandejita de papa x1"},{"name":"Tradicional simple","price":9000,"image":"assets/pxw-menu/1308_1777858368_74G.jpg","desc":"Pan de papa, medallon de carne, cheddar ×2, lechuga y tomate. Bandejita de papa x1"},{"name":"Whopper simple","price":9500,"image":"assets/pxw-menu/1308_1777764926_33G.png","desc":"Pan de papa, medallón de carne, cheddar x2, lechuga, tomate, cebolla, ketchup, mayonesa. Bandejita de papa x1"}]},{"name":"Dobles","items":[{"name":"Chesse doble","price":11200,"image":"assets/pxw-menu/1308_1780088833_70G.jpg","desc":"pan de papa, medallon de carne x2 , cheddarBandejita de papa x1"},{"name":"TR tradi doble","price":12200,"image":"assets/pxw-menu/1308_1777764109_100G.png","desc":"Pan de papa, medallon de carne x2, cheddar, barbacoa, cebolla crispy y bacon. Papa x1"},{"name":"Big tradi De la casa doble","price":11800,"image":"assets/pxw-menu/1308_1777764290_86G.png","desc":"Pan de papa, medallon de carne x2, cheddar,salsa big tradi,lechuga, bacon y cebolla morada. Bandejita de papa x1."},{"name":"Burguer Cebolla Caramelizada doble","price":11800,"image":"assets/pxw-menu/1308_1777764416_29G.png","desc":"Pan de papa, medallon de carne x2 , cheddar x4 , cebolla caramelizada y huevo. Bandejita de papa x1"},{"name":"Cuarto de Libra doble","price":11500,"image":"assets/pxw-menu/1308_1777855955_94G.png","desc":"Pan de papa , medallon de carne x2 , cheddar y salsa cuarto de libraBandejita de papa x1"},{"name":"Mega bacon (EGG) doble","price":12300,"image":"assets/pxw-menu/1308_1777858484_34G.jpg","desc":"Pan de papa, medallon de carne x2, cheddar, super bacon y huevo ala plancha. Bandejita de papa x1"},{"name":"Stacker Tradi doble","price":12300,"image":"assets/pxw-menu/1308_1777855835_58G.png","desc":"Pan de papa, medallon de carne x2, cheddar , cebolla caramelizada, bacon y salsa stackerBandejita de papa x1"},{"name":"Super Bacon doble","price":11800,"image":"assets/pxw-menu/1308_1777764457_85G.png","desc":"Pan de papa , medallon de carne x2 , cheddar y super bacon. Bandejitas de papa x1"},{"name":"Tasty Tradi doble","price":11800,"image":"assets/pxw-menu/1308_1777856328_18G.png","desc":"Pan de papa , medallon de carne x2 , cheddar, lechuga, tomate y salsa tasty"},{"name":"Tasty Tradi Cuarto doble","price":11300,"image":"assets/pxw-menu/1308_1777858298_53G.jpg","desc":"Pan de papa , medallon de carne x2 , cheddar , salsa tasty y salsa cuarto de libra. Bandejitas de papa x1."},{"name":"Tradicional doble","price":11300,"image":"assets/pxw-menu/1308_1777858398_20G.jpg","desc":"Pan de papa , medallon de carne x2 , cheddar , lechuga y tomate. Bandejita de papa x1"},{"name":"Whopper doble","price":11800,"image":"assets/pxw-menu/1308_1777764645_100G.png","desc":"Pan de papa, medallón de carne x2, cheddar, lechuga, tomate, cebolla, ketchup, mayonesa. Bandejita de papa x1"}]},{"name":"Triples","items":[{"name":"Chesse triple","price":13500,"image":"assets/pxw-menu/1308_1777764170_39G.png","desc":"Pan de papa , medallon de carne x3, cheddarBandejita de papa x1"},{"name":"TR tradi triple","price":14300,"image":"assets/pxw-menu/1308_1777764143_12G.png","desc":"Pan de papa, medallon de carne x3, cheddar, barbacoa, cebolla cryspi y baconPapa x1"},{"name":"Big tradi De la casa triple","price":13900,"image":"assets/pxw-menu/1308_1777764331_68G.png","desc":"Pan de papa ,medallon de carne x3, cheddar,salsa big tradi,lechuga,bacon y cebolla morada. Bandejita x1"},{"name":"Burguer Cebolla Caramelizada triple","price":13500,"image":"assets/pxw-menu/1308_1777764965_51G.png","desc":"Pan de papa, medallon de carne x3 , cheddar, cebolla caramelizada y huevo ala plancha. Bandejita de papa x1"},{"name":"Cuarto de Libra triple","price":13100,"image":"assets/pxw-menu/1308_1777855989_73G.png","desc":"Pan de papa, medallon de carne x3, cheddar y salsa cuarto de libraBandejita de papa x1"},{"name":"Mega bacon (EGG) triple","price":14500,"image":"assets/pxw-menu/1308_1777858561_43G.jpg","desc":"Pan de papa, medallon de carne x3 , cheddar, super bacon y huevo ala plancha. Bandejita de papa x1."},{"name":"Stacker Tradi triple","price":14500,"image":"assets/pxw-menu/1308_1777855873_92G.png","desc":"Pan de papa, medallon de carne x3, cheddar , cebolla caramelizada, bacon y salsa stackerBandejita de papa x1"},{"name":"Super Bacon triple","price":14000,"image":"assets/pxw-menu/1308_1777765005_94G.png","desc":"pan de papa, medallon de carne x3 , cheddar y super bacon. Bandejita de papa x1"},{"name":"Tasty Tradi triple","price":14000,"image":"assets/pxw-menu/1308_1777856365_37G.png","desc":"Pan de papa, medallon de carne x3 ,cheddar, lechuga, tomate y salsa tastyBandejita de papa x1"},{"name":"Tasty Tradi Cuarto triple","price":13500,"image":"assets/pxw-menu/1308_1777858324_6G.jpg","desc":"Pan de papa, medallon de carne x3, cheddar , salsa cuarto de libra y salsa tasty. Bandejita de papa x1"},{"name":"Tradicional triple","price":13500,"image":"assets/pxw-menu/1308_1777858430_0G.jpg","desc":"Pan de papa, medallon de carne x3, cheddar, lechuga y tomate. Bandejita de papa x1"},{"name":"Whopper triple","price":14000,"image":"assets/pxw-menu/1308_1777765066_37G.png","desc":"Pan de papa, medallón de carne x3, cheddar, lechuga, tomate, cebolla, ketchup, mayonesa. Bandejita de papa x1"}]},{"name":"sandwich de milanesa","items":[{"name":"Sandwich de Pollo","price":9000,"image":"assets/pxw-menu/1308_1758946358_97G.png","desc":"Pan de papa, milanesas de pollo , lechuga , tomate y huevo ala planchaopcional adererezos (mayonesa, ketchup o mostaza)Bandejita de papa x1Para una persona."}]},{"name":"Nuggets","items":[{"name":"Nuggets x6","price":3500,"image":"assets/pxw-menu/1308_1758949334_1G.png","desc":"Nuggets patita de pollo x6"},{"name":"Nuggets x6 /papas.","price":6500,"image":"assets/pxw-menu/1308_1758949478_45G.png","desc":"6 nuggets + band de papas"},{"name":"Nuggets/dips","price":6000,"image":"assets/pxw-menu/1308_1758949632_62G.png","desc":"10 nuggets + dips de ketchup y mayonesa."}]},{"name":"Menú Kids","items":[{"name":"Burger Kids baggio","price":8500,"image":"assets/pxw-menu/1308_1758945889_37G.png","desc":"Chesse simple + papas + baggio de 200ml"},{"name":"Nuggets x10 papas baggio kids","price":8500,"image":"assets/pxw-menu/1308_1758946086_31G.png","desc":"10 Nuggets de pollo + papas + baggio"}]},{"name":"Combos Dobles","items":[{"name":"2 super bacon dobles","price":22000,"image":"assets/pxw-menu/1308_1778716961_83G.png","desc":"2 super bacon dobles + 2 papas."},{"name":"2 chesses dobles","price":21000,"image":"assets/pxw-menu/1308_1780089045_8G.jpg","desc":"2 chesses dobles + 2 papas"},{"name":"2 cuarto de libra dobles","price":22000,"image":"assets/pxw-menu/1308_1778715088_62G.png","desc":"2 cuartos de libra dobles + 2 papas."},{"name":"2 tastys dobles","price":22000,"image":"assets/pxw-menu/1308_1778715159_5G.png","desc":"2 tastys dobles + 2 papas."},{"name":"2 whopper dobles","price":22000,"image":"assets/pxw-menu/1308_1778716409_86G.png","desc":"2 whopper dobles + 2 papas."},{"name":"2 mega bacon dobles","price":23000,"image":"assets/pxw-menu/1308_1778716377_43G.png","desc":"2 mega bacon dobles + 2 papas."}]},{"name":"Combos triples","items":[{"name":"2 chesses triples","price":26000,"image":"assets/pxw-menu/1308_1778722109_61G.png","desc":"2 chesses triples + 2 papas."},{"name":"2 Whopper triples","price":27000,"image":"assets/pxw-menu/1308_1778724186_39G.png","desc":"2 whopper triple +2 papas."},{"name":"2 cuarto de libra triples","price":25000,"image":"assets/pxw-menu/1308_1778724419_17G.png","desc":"2 cuarto de libra+2 papas."},{"name":"2 super bacon triples","price":27000,"image":"assets/pxw-menu/1308_1778722355_66G.png","desc":"2 suoer bacon triples + 2 papas."},{"name":"2 tastys triples","price":27000,"image":"assets/pxw-menu/1308_1778724098_34G.png","desc":"2 tasty triples + 2 papas."},{"name":"2 mega bacon triples","price":28000,"image":"assets/pxw-menu/1308_1778722169_84G.png","desc":"2 mega bacon triples + 2 papas."}]},{"name":"Super combos","items":[{"name":"Combo doble x1 lata coca","price":12500,"image":"assets/pxw-menu/1308_1758945323_79G.png","desc":"Chesse doble + bandejitas de papas+ lata de coca-"},{"name":"Sandwich de milanesa x2","price":17000,"image":"assets/pxw-menu/1308_1758945243_15G.png","desc":"Pan de papa, milanesas de pollo , lechuga, tomate y huevo ala plancha. Opcional aderezos (mayonesa, ketchup o mostaza)Bandejita de papa x2Sandwich para 2 personas."},{"name":"Combo x3 sin coca","price":31500,"image":"assets/pxw-menu/1308_1758946616_22G.png","desc":"3 chesse dobles + 3 papas"},{"name":"Combo x3 con coca","price":35500,"image":"assets/pxw-menu/1308_1758945789_71G.png","desc":"3 chesse dobles + 3 papas + coca de 1.75lts/sprite 1,75"},{"name":"Tradicombo familiar x4","price":45500,"image":"assets/pxw-menu/1308_1758945378_66G.png","desc":"4 cheese doble + 4 papas + 1 COCA COLA 2.25/ SPRITE 2,25"}]},{"name":"Agregados/extras","items":[{"name":"Band papas chicas","price":3000,"image":"assets/pxw-menu/1308_1778726448_85G.jpg","desc":""},{"name":"Band de papas grande","price":5000,"image":"assets/pxw-menu/1308_1778726506_98G.jpg","desc":""},{"name":"Dips de cheddar chico","price":2000,"image":"assets/pxw-menu/1308_1778727157_43G.png","desc":""},{"name":"Dips de cheddar grande","price":3000,"image":"assets/pxw-menu/1308_1778727259_24G.png","desc":"Dips de cheddar grande 80cc"}]},{"name":"Tragos","items":[{"name":"Fernet","price":7000,"image":"assets/pxw-menu/1308_1766714522_58G.jpg","desc":"Fernet+coca cola."},{"name":"Gancia","price":7000,"image":"assets/pxw-menu/1308_1776472584_52G.png","desc":"Gancia + sprite y limón"},{"name":"Caipirosca frutos rojos","price":8500,"image":"assets/pxw-menu/1308_1766713094_35G.jpg","desc":"Smirnof berry + sprite + lima y frutos rojos."},{"name":"Daiquiri Frutilla","price":8000,"image":"assets/pxw-menu/1308_1766714037_5G.jpg","desc":""},{"name":"Tradi beach.","price":8000,"image":"assets/pxw-menu/1308_1766713758_14G.jpg","desc":""},{"name":"Tropical","price":8000,"image":"assets/pxw-menu/1308_1766714099_90G.jpg","desc":""},{"name":"Melón","price":8000,"image":"assets/pxw-menu/1308_1766866031_36G.jpg","desc":"Licor de Melon + vodka de melon y speed."},{"name":"Gin de flin paff","price":8000,"image":"assets/pxw-menu/1308_1766714412_10G.jpg","desc":"Gin+ flynn paff + sprite"},{"name":"Mojito","price":7000,"image":"assets/pxw-menu/1308_1766713468_79G.jpg","desc":"Ron + sprite y menta"},{"name":"Gyn tonic","price":7000,"image":"assets/pxw-menu/1308_logo.png","desc":""},{"name":"Gancia Frozen","price":7500,"image":"assets/pxw-menu/1308_logo.png","desc":"Gancia + sprite + helado de limón."},{"name":"Oreo","price":7000,"image":"assets/pxw-menu/1308_1754766648_29G.jpg","desc":"Vodka +helado+licor de dulce de leche+ oreos+ crema y salsa de chocolate."},{"name":"Serenito","price":7000,"image":"assets/pxw-menu/1308_1754767599_11G.jpg","desc":"Vodka+helado+crema+salsa de chocolate y rocklets."}]},{"name":"Postres","items":[{"name":"Franui","price":8500,"image":"assets/pxw-menu/1308_1772417975_20G.jpg","desc":"Franui de leche"},{"name":"Mantecol bombón helado","price":8000,"image":"assets/pxw-menu/1308_1772418040_89G.jpg","desc":""},{"name":"Gio de leche","price":6500,"image":"assets/pxw-menu/1308_1772418322_72G.jpg","desc":""},{"name":"Gio pistacho","price":8000,"image":"assets/pxw-menu/1308_1772418450_15G.jpg","desc":""},{"name":"Chocotorta","price":5000,"image":"assets/pxw-menu/1308_1772417916_29G.jpg","desc":"Chocotorta"},{"name":"Flan con ddl","price":3500,"image":"assets/pxw-menu/1308_1772418275_0G.jpg","desc":""},{"name":"Oreo","price":5000,"image":"assets/pxw-menu/1308_1772418177_74G.jpg","desc":""},{"name":"Durazno con crema","price":4000,"image":"assets/pxw-menu/1308_1772418517_43G.jpg","desc":""}]},{"name":"Bebidas","items":[{"name":"Aquarius de pera de 500","price":1800,"image":"assets/pxw-menu/1308_1779591606_54G.jpg","desc":""},{"name":"Baggio de 200ml","price":800,"image":"assets/pxw-menu/1308_1753568542_88G.jpg","desc":"Baggio de 200ml"},{"name":"Baggio 1l","price":2500,"image":"assets/pxw-menu/1308_1766876889_40G.jpg","desc":"Baggio de 1litro"},{"name":"Cepita 1l","price":3000,"image":"assets/pxw-menu/1308_1766876771_14G.jpg","desc":"Cepita de durazno o naranja"},{"name":"Lata de coca 354ml","price":2200,"image":"assets/pxw-menu/1308_1753569070_1G.jpg","desc":"Lata de coca"},{"name":"Coca de 500ml","price":2500,"image":"assets/pxw-menu/1308_1753569212_72G.jpg","desc":""},{"name":"Coca de 1.75","price":5000,"image":"assets/pxw-menu/1308_1777581232_56G.jpg","desc":""},{"name":"Coca 2.25lts","price":6000,"image":"assets/pxw-menu/1308_1753569319_68G.jpg","desc":""},{"name":"Lata heineken","price":4000,"image":"assets/pxw-menu/1308_1777580996_10G.png","desc":""},{"name":"Lata brahama","price":3500,"image":"assets/pxw-menu/1308_1777581509_74G.jpg","desc":""},{"name":"Monster negro","price":3500,"image":"assets/pxw-menu/1308_1777581548_36G.jpg","desc":""},{"name":"Lata smirnof","price":4000,"image":"assets/pxw-menu/1308_1766876709_100G.jpg","desc":""},{"name":"Placer chica","price":800,"image":"assets/pxw-menu/1308_1777581469_24G.png","desc":""},{"name":"Placer 1.5lts","price":1800,"image":"assets/pxw-menu/1308_1753568804_91G.jpg","desc":"Jugo placer de 1.5lts sabor a eleccion."},{"name":"Gaseosa manaos","price":2000,"image":"assets/pxw-menu/1308_1753568957_14G.png","desc":"Gaseosa manaos sabor a elección"}]}]
+
+    const products = menuCategories.flatMap((category) => category.items.map((item) => Object.assign(item, { category: category.name })));
 
     const panel = document.getElementById("chatPanel");
     const qtyGrid = document.getElementById("qtyGrid");
     const totalEl = document.getElementById("orderTotal");
     const form = document.getElementById("orderForm");
     const heroVideo = document.querySelector(".hero-video");
-    const menuOrderSlots = document.querySelectorAll("[data-menu-order]");
+    const menuCascade = document.getElementById("menuCascade");
     const topDate = document.getElementById("topDate");
     const topTime = document.getElementById("topTime");
-    const money = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+    const money = new Intl. NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
     function updateTopClock() {
       const now = new Date();
       const compact = window.matchMedia("(max-width: 560px)").matches;
       if (topDate) {
-        topDate.textContent = new Intl.DateTimeFormat("es-AR", {
+        topDate.textContent = new Intl. DateTimeFormat("es-AR", {
           day: "2-digit",
           month: compact ? "2-digit" : "long",
           year: "numeric",
@@ -1402,7 +1323,7 @@
         }).format(now);
       }
       if (topTime) {
-        topTime.textContent = new Intl.DateTimeFormat("es-AR", {
+        topTime.textContent = new Intl. DateTimeFormat("es-AR", {
           hour: "2-digit",
           minute: "2-digit",
           timeZone: "America/Argentina/Buenos_Aires"
@@ -1413,6 +1334,44 @@
     updateTopClock();
     setInterval(updateTopClock, 1000);
 
+    function renderMenuCascade() {
+      if (!menuCascade) return [];
+      menuCascade.innerHTML = "";
+      menuCategories.forEach((category, categoryIndex) => {
+        const detail = document.createElement("details");
+        detail.className = "menu-category";
+        if (categoryIndex === 0) detail.open = true;
+
+        const summary = document.createElement("summary");
+        summary.innerHTML = `<span>${category.name}</span><small>${category.items.length} productos</small>`;
+
+        const list = document.createElement("div");
+        list.className = "cascade-products";
+
+        category.items.forEach((product) => {
+          const index = products.indexOf(product);
+          const article = document.createElement("article");
+          article.className = "cascade-product";
+          article.innerHTML = `
+            <img alt="${product.name}" src="${product.image}" loading="lazy">
+            <div class="cascade-info">
+              <div class="cascade-top">
+                <h3>${product.name}</h3>
+                <span class="price">${money.format(product.price)}</span>
+              </div>
+              <p>${product.desc || "Producto de la carta Tradiburger."}</p>
+              <div class="menu-order" data-menu-order="${index}"></div>
+            </div>
+          `;
+          list.appendChild(article);
+        });
+
+        detail.append(summary, list);
+        menuCascade.appendChild(detail);
+      });
+      return document.querySelectorAll("[data-menu-order]");
+    }
+
     products.forEach((product, index) => {
       const row = document.createElement("label");
       row.className = "qty-row";
@@ -1422,6 +1381,8 @@
       `;
       qtyGrid.appendChild(row);
     });
+
+    const menuOrderSlots = renderMenuCascade();
 
     menuOrderSlots.forEach((slot) => {
       const index = Number(slot.dataset.menuOrder);
@@ -1525,3 +1486,8 @@
   </script>
 </body>
 </html>
+
+
+
+
+
