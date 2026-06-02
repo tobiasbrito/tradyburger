@@ -396,6 +396,18 @@
 
     .item-content { display: grid; gap: 10px; padding: 18px; }
 
+    .item-category {
+      width: fit-content;
+      border: 1px solid rgba(255, 229, 0, .28);
+      border-radius: 999px;
+      padding: 5px 8px;
+      color: var(--soft);
+      background: rgba(255, 229, 0, .08);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
     .item-top {
       display: flex;
       justify-content: space-between;
@@ -1057,107 +1069,200 @@
   <main>
     <section id="menu">
       <div class="section-head">
-        <h2>Menu caliente</h2>
-        <p>Carta ampliada con fotos hechas a medida para que cada producto coincida con lo que describe el menu.</p>
+        <h2>Carta Tradi</h2>
+        <p>Seleccion basada en la carta actual de Tradiburger, con fotos premium hechas a medida para mostrar mejor cada producto.</p>
       </div>
       <div class="menu">
         <article class="item">
-          <img alt="Tradi Clasica con una carne, cheddar y vegetales" src="assets/menu-tradi-clasica.png">
+          <img alt="Cheese doble con dos carnes y cheddar" src="assets/menu-cheese-doble-ai.png">
           <div class="item-content">
+            <span class="item-category">Doble</span>
             <div class="item-top">
-              <h3>Tradi Clasica</h3>
-              <span class="price">$8.900</span>
+              <h3>Cheese doble</h3>
+              <span class="price">$11.200</span>
             </div>
-            <p>Medallon, cheddar, lechuga, tomate y aderezo Tradi.</p>
+            <p>Pan de papa, dos medallones de carne, cheddar y salsa.</p>
             <div class="menu-order" data-menu-order="0"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Doble Burgerrr con dos carnes y panceta" src="assets/menu-doble-burgerrr.png">
+          <img alt="TR Tradi triple con tres carnes cheddar panceta y cebolla" src="assets/menu-tr-tradi-triple-ai.png">
           <div class="item-content">
+            <span class="item-category">Triple</span>
             <div class="item-top">
-              <h3>Doble Burgerrr</h3>
-              <span class="price">$11.500</span>
+              <h3>TR Tradi triple</h3>
+              <span class="price">$14.300</span>
             </div>
-            <p>Doble carne, doble cheddar, panceta y cebolla caramelizada.</p>
+            <p>Tres medallones, cheddar, bacon, cebolla caramelizada y salsa Tradi.</p>
             <div class="menu-order" data-menu-order="1"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Triple Fuego con tres carnes cheddar y jalapenos" src="assets/menu-triple-fuego.png">
+          <img alt="Big Tradi de la casa con doble carne vegetales y salsa" src="assets/menu-big-tradi-ai.png">
           <div class="item-content">
+            <span class="item-category">De la casa</span>
             <div class="item-top">
-              <h3>Triple Fuego</h3>
-              <span class="price">$14.900</span>
+              <h3>Big Tradi doble</h3>
+              <span class="price">$11.800</span>
             </div>
-            <p>Tres carnes, cheddar derretido, jalapenos, pickles y salsa picante.</p>
+            <p>Doble carne, cheddar, lechuga, tomate, pickles y salsa de la casa.</p>
             <div class="menu-order" data-menu-order="2"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Pollo Crispy con pollo frito y vegetales" src="assets/menu-pollo-crispy.png">
+          <img alt="Super Bacon doble con bacon crocante y cheddar" src="assets/menu-super-bacon-ai.png">
           <div class="item-content">
+            <span class="item-category">Bacon</span>
             <div class="item-top">
-              <h3>Pollo Crispy</h3>
-              <span class="price">$10.800</span>
+              <h3>Super Bacon doble</h3>
+              <span class="price">$11.800</span>
             </div>
-            <p>Pollo crispy dorado, lechuga, tomate, pickles y salsa cremosa.</p>
+            <p>Doble medallon, cheddar, bacon crocante y salsa ahumada.</p>
             <div class="menu-order" data-menu-order="3"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Papas Tradi cargadas con cheddar y panceta" src="assets/menu-papas-tradi.png">
+          <img alt="Mega Bacon Egg triple con cheddar bacon y huevo" src="assets/menu-triple-fuego.png">
           <div class="item-content">
+            <span class="item-category">Triple</span>
             <div class="item-top">
-              <h3>Papas Tradi</h3>
-              <span class="price">$6.900</span>
+              <h3>Mega Bacon EGG triple</h3>
+              <span class="price">$14.500</span>
             </div>
-            <p>Papas crocantes con cheddar caliente, panceta, verdeo y salsa Tradi.</p>
+            <p>Tres carnes, cheddar, bacon, huevo y salsa para fanas de lo potente.</p>
             <div class="menu-order" data-menu-order="4"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Pancho Doble con dos salchichas cheddar panceta y salsas" src="assets/menu-pancho-doble.png">
+          <img alt="Burguer cebolla caramelizada doble con cheddar" src="assets/menu-doble-burgerrr.png">
           <div class="item-content">
+            <span class="item-category">Doble</span>
             <div class="item-top">
-              <h3>Pancho Doble</h3>
-              <span class="price">$7.900</span>
+              <h3>Cebolla caramelizada doble</h3>
+              <span class="price">$11.800</span>
             </div>
-            <p>Doble salchicha grillada, cheddar, panceta, lluvia de verdeo y salsas.</p>
+            <p>Doble carne, cheddar, cebolla caramelizada y salsa intensa.</p>
             <div class="menu-order" data-menu-order="5"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Nuggets de pollo crocantes con salsas" src="assets/menu-nuggets-pollo.png">
+          <img alt="Cuarto de libra doble con cheddar" src="assets/menu-tradi-clasica.png">
           <div class="item-content">
+            <span class="item-category">Doble</span>
             <div class="item-top">
-              <h3>Nuggets de Pollo</h3>
-              <span class="price">$7.500</span>
+              <h3>Cuarto de Libra doble</h3>
+              <span class="price">$11.500</span>
             </div>
-            <p>Diez nuggets dorados, crocantes, con salsa cheddar y barbacoa.</p>
+            <p>Doble medallon, cheddar, pepinos, ketchup y mostaza clasica.</p>
             <div class="menu-order" data-menu-order="6"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Combo Tradi con hamburguesa papas y bebida" src="assets/menu-combo-tradi.png">
+          <img alt="Tasty Tradi triple con cheddar y salsa tasty" src="assets/menu-combo-tradi.png">
           <div class="item-content">
+            <span class="item-category">Triple</span>
             <div class="item-top">
-              <h3>Combo Tradi</h3>
-              <span class="price">$13.200</span>
+              <h3>Tasty Tradi triple</h3>
+              <span class="price">$14.000</span>
             </div>
-            <p>Hamburguesa, papas crocantes y bebida para salir rodando feliz.</p>
+            <p>Tres carnes, cheddar, cebolla, salsa tasty y pan de papa.</p>
             <div class="menu-order" data-menu-order="7"></div>
           </div>
         </article>
         <article class="item">
-          <img alt="Bebidas frias cola limonada agua y naranja" src="assets/menu-bebidas.png">
+          <img alt="Whopper doble con vegetales frescos y cheddar" src="assets/menu-pollo-crispy.png">
           <div class="item-content">
+            <span class="item-category">Doble</span>
             <div class="item-top">
-              <h3>Bebidas Frias</h3>
-              <span class="price">$2.800</span>
+              <h3>Whopper doble</h3>
+              <span class="price">$11.800</span>
             </div>
-            <p>Gaseosa, limonada, agua o naranja bien fria para acompanar.</p>
+            <p>Doble carne, cheddar, lechuga, tomate, cebolla y salsa.</p>
             <div class="menu-order" data-menu-order="8"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Sandwich de pollo con milanesa lechuga y tomate" src="assets/menu-pancho-doble.png">
+          <div class="item-content">
+            <span class="item-category">Pollo</span>
+            <div class="item-top">
+              <h3>Sandwich de Pollo</h3>
+              <span class="price">$9.000</span>
+            </div>
+            <p>Pan de papa, milanesa de pollo, lechuga, tomate y aderezos.</p>
+            <div class="menu-order" data-menu-order="9"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Nuggets de pollo con papas y dips" src="assets/menu-nuggets-papas-ai.png">
+          <div class="item-content">
+            <span class="item-category">Nuggets</span>
+            <div class="item-top">
+              <h3>Nuggets x10 + dips</h3>
+              <span class="price">$6.000</span>
+            </div>
+            <p>Diez nuggets dorados con dips de ketchup y mayonesa.</p>
+            <div class="menu-order" data-menu-order="10"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Nuggets con papas y bebida kids" src="assets/menu-nuggets-pollo.png">
+          <div class="item-content">
+            <span class="item-category">Kids</span>
+            <div class="item-top">
+              <h3>Nuggets kids</h3>
+              <span class="price">$8.500</span>
+            </div>
+            <p>Diez nuggets de pollo, papas y Baggio de 200ml.</p>
+            <div class="menu-order" data-menu-order="11"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Bandeja de papas grandes crocantes" src="assets/menu-papas-tradi.png">
+          <div class="item-content">
+            <span class="item-category">Papas</span>
+            <div class="item-top">
+              <h3>Band de papas grande</h3>
+              <span class="price">$5.000</span>
+            </div>
+            <p>Bandeja grande de papas crocantes para sumar al pedido.</p>
+            <div class="menu-order" data-menu-order="12"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Combo doble con lata de coca y papas" src="assets/menu-bebidas.png">
+          <div class="item-content">
+            <span class="item-category">Combo</span>
+            <div class="item-top">
+              <h3>Combo doble x1 lata coca</h3>
+              <span class="price">$12.500</span>
+            </div>
+            <p>Cheese doble, bandeja de papas y lata de Coca-Cola.</p>
+            <div class="menu-order" data-menu-order="13"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Combo familiar con cuatro hamburguesas papas y gaseosa" src="assets/menu-combo-familiar-ai.png">
+          <div class="item-content">
+            <span class="item-category">Familiar</span>
+            <div class="item-top">
+              <h3>Tradicombo familiar x4</h3>
+              <span class="price">$30.000</span>
+            </div>
+            <p>Cuatro cheese dobles, cuatro papas y gaseosa grande.</p>
+            <div class="menu-order" data-menu-order="14"></div>
+          </div>
+        </article>
+        <article class="item">
+          <img alt="Bebidas frias variadas" src="assets/menu-bebidas.png">
+          <div class="item-content">
+            <span class="item-category">Bebidas</span>
+            <div class="item-top">
+              <h3>Coca 1.75L</h3>
+              <span class="price">$5.000</span>
+            </div>
+            <p>Gaseosa fria de 1.75 litros para acompanar combos y promos.</p>
+            <div class="menu-order" data-menu-order="15"></div>
           </div>
         </article>
       </div>
@@ -1256,15 +1361,22 @@
   <script>
     const whatsappNumber = "5491162588633";
     const products = [
-      { name: "Tradi Clasica", price: 8900 },
-      { name: "Doble Burgerrr", price: 11500 },
-      { name: "Triple Fuego", price: 14900 },
-      { name: "Pollo Crispy", price: 10800 },
-      { name: "Papas Tradi", price: 6900 },
-      { name: "Pancho Doble", price: 7900 },
-      { name: "Nuggets de Pollo", price: 7500 },
-      { name: "Combo Tradi", price: 13200 },
-      { name: "Bebidas Frias", price: 2800 }
+      { name: "Cheese doble", price: 11200 },
+      { name: "TR Tradi triple", price: 14300 },
+      { name: "Big Tradi doble", price: 11800 },
+      { name: "Super Bacon doble", price: 11800 },
+      { name: "Mega Bacon EGG triple", price: 14500 },
+      { name: "Cebolla caramelizada doble", price: 11800 },
+      { name: "Cuarto de Libra doble", price: 11500 },
+      { name: "Tasty Tradi triple", price: 14000 },
+      { name: "Whopper doble", price: 11800 },
+      { name: "Sandwich de Pollo", price: 9000 },
+      { name: "Nuggets x10 + dips", price: 6000 },
+      { name: "Nuggets kids", price: 8500 },
+      { name: "Band de papas grande", price: 5000 },
+      { name: "Combo doble x1 lata coca", price: 12500 },
+      { name: "Tradicombo familiar x4", price: 30000 },
+      { name: "Coca 1.75L", price: 5000 }
     ];
 
     const panel = document.getElementById("chatPanel");
