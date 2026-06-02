@@ -377,9 +377,28 @@ async function sendWhatsAppText(to, text) {
 
 async function sendLocalNotification(text, excludePhone = "") {
   const settings = await getSettings();
-  const notifyNumber = cleanPhone(process.env.WHATSAPP_LOCAL_NOTIFY_NUMBER || settings.whatsapp_number);
+  const notifyNumber = cleanPhone(
+    process.env.LOCAL_WHATSAPP_NUMBER ||
+    process.env.WHATSAPP_LOCAL_NOTIFY_NUMBER ||
+    settings.whatsapp_number
+  );
   if (!notifyNumber || notifyNumber === cleanPhone(excludePhone)) return { sent: false, reason: "No separate notify number" };
   return sendWhatsAppText(notifyNumber, text);
+}
+
+function envStatus() {
+  const keys = [
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "ADMIN_PASSWORD",
+    "WHATSAPP_ACCESS_TOKEN",
+    "WHATSAPP_PHONE_NUMBER_ID",
+    "WHATSAPP_VERIFY_TOKEN",
+    "LOCAL_WHATSAPP_NUMBER",
+    "WHATSAPP_LOCAL_NOTIFY_NUMBER",
+    "WHATSAPP_GRAPH_VERSION"
+  ];
+  return Object.fromEntries(keys.map((key) => [key, Boolean(process.env[key])]));
 }
 
 function extractWhatsAppMessages(body) {
@@ -848,6 +867,11 @@ exports.handler = async (event) => {
     if (method === "GET" && route === "health") {
       requireEnv();
       return response(200, { ok: true });
+    }
+
+    if (method === "GET" && route === "diagnostics") {
+      if (!isAdmin(event)) return response(401, { error: "Admin password required" });
+      return response(200, { ok: true, env: envStatus() });
     }
 
     if (method === "GET" && route === "settings") {
