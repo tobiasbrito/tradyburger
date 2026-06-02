@@ -51,7 +51,7 @@ function repliesForStep(step) {
 }
 
 function showStartState() {
-  setQuickReplies(["hola", "menu", "quiero 2 chesse simple", "ver bebidas"]);
+  setQuickReplies(["hola", "menu", "bebidas", "ayuda"]);
   input.focus();
 }
 

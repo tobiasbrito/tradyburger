@@ -138,6 +138,10 @@ function botCartSummary(cart) {
   return cart.length ? `${lines.join("\n")}\n\nTotal estimado: ${money(total)}` : "Todavia no agregaste productos.";
 }
 
+function botWelcomeText(settings, categories) {
+  return `Hola! Soy Tradi, el bot de pedidos de ${settings.business_name}.\n\nTe paso el menu para arrancar. Elegi una categoria por numero o por nombre:\n\n${botMenuText(categories)}\n\nEjemplo: escribi "2" para Dobles, o "bebidas".`;
+}
+
 function normalizeText(value = "") {
   return String(value)
     .toLowerCase()
@@ -528,7 +532,7 @@ async function handleSmartBotDemo(body) {
     return {
       session_id: session.id,
       step: session.step,
-      reply: `Que haces! Soy Tradi, el bot de pedidos de ${settings.business_name}.\n\nTe ayudo a armar el pedido al toque. Podes escribir natural, por ejemplo: "quiero 2 chesse dobles", "ver bebidas" o "carrito".\n\nCategorias:\n${botMenuText(categories)}`,
+      reply: botWelcomeText(settings, categories),
       categories
     };
   }
@@ -559,6 +563,12 @@ async function handleSmartBotDemo(body) {
     };
   }
 
+  if (session.last_message === "session_started" && session.step === "category" && !cart.length) {
+    session.last_message = text;
+    await saveBotSession({ ...session, state, cart });
+    return { session_id: session.id, step: session.step, reply: botWelcomeText(settings, categories) };
+  }
+
   if (["ayuda", "help"].includes(normalized)) {
     reply = `Te doy una mano:\n- Escribi una categoria: "bebidas", "dobles", "nuggets"\n- Pedi directo: "2 chesse simple" o "una coca"\n- Escribi "carrito" para ver tu pedido\n- Escribi "menu" para volver al menu\n- Escribi "cancelar" para empezar de cero`;
   } else if (["carrito", "pedido", "resumen"].includes(normalized)) {
@@ -571,22 +581,23 @@ async function handleSmartBotDemo(body) {
     await saveBotSession(session);
     return { session_id: session.id, step: session.step, reply: `Listo, arrancamos de cero.\n\nCategorias:\n${botMenuText(categories)}` };
   } else if (isGreeting(text) && session.step === "category" && !cart.length) {
-    reply = `Hola! Soy Tradi. Te ayudo con el pedido.\n\nQueres que te pase el menu o ya sabes que vas a pedir?\n\nPodes escribir "menu", "bebidas" o directamente algo como "quiero 2 chesse simple".`;
+    reply = botWelcomeText(settings, categories);
   } else if (normalized === "menu" || normalized === "ver menu") {
     session.step = "category";
     reply = `Dale, volvemos al menu.\n\nCategorias:\n${botMenuText(categories)}`;
   } else if (session.step === "category") {
-    const directProduct = findProduct(text, products);
+    const isPlainNumber = /^\d+$/.test(normalized);
+    const directProduct = isPlainNumber ? null : findProduct(text, products);
     const category = findCategory(text.replace(/^ver\s+/, ""), categories);
-    if (directProduct) {
+    if (category) {
+      state.category = category.name;
+      session.step = "product";
+      reply = `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
+    } else if (directProduct) {
       const quantity = parseQuantity(text);
       addToCart(cart, directProduct, quantity);
       session.step = "more";
       reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
-    } else if (category) {
-      state.category = category.name;
-      session.step = "product";
-      reply = `Categoria: ${category.name}. Mira lo que tengo:\n${botProductText(category)}\n\nPodes poner el numero o escribir el nombre.`;
     } else {
       reply = `No encontre esa categoria, pero te sigo.\n\nPodes escribir "dobles", "bebidas", "nuggets" o pedirme directo: "quiero 2 chesse dobles".\n\nCategorias:\n${botMenuText(categories)}`;
     }
