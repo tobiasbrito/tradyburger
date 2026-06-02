@@ -45,6 +45,17 @@ create table if not exists public.settings (
   delivery_cost integer not null default 0 check (delivery_cost >= 0)
 );
 
+create table if not exists public.bot_sessions (
+  id uuid primary key default gen_random_uuid(),
+  customer_phone text,
+  step text not null default 'saludo',
+  state jsonb not null default '{}'::jsonb,
+  cart jsonb not null default '[]'::jsonb,
+  last_message text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -60,10 +71,16 @@ create trigger products_set_updated_at
 before update on public.products
 for each row execute function public.set_updated_at();
 
+drop trigger if exists bot_sessions_set_updated_at on public.bot_sessions;
+create trigger bot_sessions_set_updated_at
+before update on public.bot_sessions
+for each row execute function public.set_updated_at();
+
 alter table public.products enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 alter table public.settings enable row level security;
+alter table public.bot_sessions enable row level security;
 
 drop policy if exists "Public can read active products" on public.products;
 create policy "Public can read active products"

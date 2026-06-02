@@ -22,6 +22,7 @@ Tablas creadas:
 - `orders`
 - `order_items`
 - `settings`
+- `bot_sessions`
 
 ## Variables de entorno en Netlify
 
@@ -55,6 +56,13 @@ npm run dev
 5. Abrir `/bot` o el bot de pedido de la web.
 
 El precio actualizado sale de la misma fuente de datos.
+
+## Endpoints de prueba
+
+- `GET /api/products`: productos activos desde Supabase.
+- `GET /api/orders`: pedidos, requiere header `x-admin-password`.
+- `GET /api/bot/demo`: inicia una sesion demo del bot.
+- `POST /api/bot/demo`: avanza conversacion demo del bot.
 
 ## Deploy
 
