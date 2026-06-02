@@ -1,0 +1,114 @@
+:root {
+  color-scheme: dark;
+  --yellow: #ffe500;
+  --soft: #fff09a;
+  --green: #21b956;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+  background:
+    linear-gradient(rgba(0, 0, 0, .64), rgba(0, 0, 0, .84)),
+    url("../hero-burger-fries-uhd-poster.jpg") center / cover fixed;
+}
+
+.bot-shell {
+  width: min(760px, calc(100% - 24px));
+  margin: 0 auto;
+  padding: 28px 0;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+header img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #080604;
+  box-shadow: 0 0 26px rgba(255, 229, 0, .45);
+}
+
+h1,
+p { margin: 0; }
+
+p { color: rgba(255, 255, 255, .72); }
+
+.phone {
+  overflow: hidden;
+  border: 1px solid rgba(255, 229, 0, .24);
+  border-radius: 8px;
+  background: rgba(8, 7, 6, .94);
+  box-shadow: 0 24px 68px rgba(0, 0, 0, .44);
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 64vh;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 16px;
+}
+
+.msg {
+  width: fit-content;
+  max-width: 82%;
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.38;
+  white-space: pre-wrap;
+}
+
+.bot {
+  background: rgba(255, 229, 0, .14);
+  border: 1px solid rgba(255, 229, 0, .25);
+}
+
+.user {
+  align-self: flex-end;
+  color: #110d05;
+  background: var(--yellow);
+  font-weight: 800;
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 229, 0, .18);
+  background: rgba(0, 0, 0, .36);
+}
+
+input,
+button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+input {
+  color: white;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .14);
+}
+
+button {
+  color: #130d05;
+  background: var(--yellow);
+  font-weight: 900;
+  cursor: pointer;
+}

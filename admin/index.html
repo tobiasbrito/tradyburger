@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | Tradi Burgerrr</title>
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="login-panel" id="loginPanel">
+      <img src="../assets/tradi-burgerrr-3d-transparent.png" alt="Tradi Burgerrr">
+      <h1>Panel administrador</h1>
+      <p>Ingresa la clave demo/admin para editar productos y revisar pedidos.</p>
+      <form id="loginForm">
+        <label>Clave de administrador
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Entrar</button>
+      </form>
+    </section>
+
+    <section class="dashboard hidden" id="dashboard">
+      <header class="admin-top">
+        <div>
+          <strong id="businessName">Tradi Burgerrr</strong>
+          <span id="modeBadge">Cargando...</span>
+        </div>
+        <button id="logoutButton" type="button">Salir</button>
+      </header>
+
+      <nav class="tabs">
+        <button class="active" type="button" data-tab="productsPanel">Productos</button>
+        <button type="button" data-tab="ordersPanel">Pedidos</button>
+      </nav>
+
+      <section class="tab-panel" id="productsPanel">
+        <form class="product-form" id="productForm">
+          <input type="hidden" name="id">
+          <label>Nombre
+            <input name="name" required>
+          </label>
+          <label>Categoria
+            <input name="category" required>
+          </label>
+          <label>Precio
+            <input name="price" type="number" min="0" step="1" required>
+          </label>
+          <label>Imagen URL
+            <input name="image_url" placeholder="assets/pxw-menu/archivo.jpg o URL externa">
+          </label>
+          <label class="wide">Descripcion
+            <textarea name="description"></textarea>
+          </label>
+          <label class="check">
+            <input name="is_active" type="checkbox" checked>
+            Activo en la web y bot
+          </label>
+          <div class="form-actions">
+            <button type="submit">Guardar producto</button>
+            <button class="secondary" type="button" id="clearProduct">Nuevo</button>
+          </div>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoria</th>
+                <th>Precio</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="productsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tab-panel hidden" id="ordersPanel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="../assets/js/admin.js"></script>
+</body>
+</html>

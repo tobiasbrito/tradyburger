@@ -1,0 +1,223 @@
+:root {
+  color-scheme: dark;
+  --yellow: #ffe500;
+  --soft: #fff09a;
+  --dark: #070606;
+  --panel: rgba(18, 14, 10, .94);
+  --line: rgba(255, 229, 0, .25);
+  --green: #21b956;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+  background:
+    linear-gradient(rgba(0, 0, 0, .72), rgba(0, 0, 0, .86)),
+    url("../hero-burger-fries-uhd-poster.jpg") center / cover fixed;
+}
+
+.admin-shell {
+  width: min(1180px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 34px 0;
+}
+
+.hidden { display: none !important; }
+
+.login-panel,
+.dashboard,
+.product-form,
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .4);
+}
+
+.login-panel {
+  display: grid;
+  gap: 16px;
+  width: min(440px, 100%);
+  margin: 8vh auto 0;
+  padding: 28px;
+}
+
+.login-panel img {
+  width: 160px;
+  justify-self: center;
+}
+
+h1,
+p { margin: 0; }
+
+p { color: rgba(255, 255, 255, .74); }
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+input,
+textarea,
+select,
+button {
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: white;
+  background: rgba(0, 0, 0, .28);
+  font: inherit;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  color: #140c04;
+  background: var(--yellow);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+button.secondary {
+  color: white;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .18);
+}
+
+.dashboard {
+  overflow: hidden;
+}
+
+.admin-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-top strong {
+  display: block;
+  color: var(--yellow);
+  font-size: 24px;
+}
+
+#modeBadge {
+  color: rgba(255, 255, 255, .65);
+  font-size: 13px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 14px 18px 0;
+}
+
+.tabs button {
+  color: white;
+  background: rgba(255, 255, 255, .1);
+}
+
+.tabs button.active {
+  color: #140c04;
+  background: var(--yellow);
+}
+
+.tab-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.product-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+
+.product-form .wide { grid-column: span 4; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.check input { min-height: auto; }
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 780px;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--soft);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.thumb {
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  object-fit: cover;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+.status {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #120e05;
+  background: var(--yellow);
+}
+
+.status.off {
+  color: white;
+  background: rgba(255, 255, 255, .18);
+}
+
+@media (max-width: 780px) {
+  .product-form {
+    grid-template-columns: 1fr;
+  }
+
+  .product-form .wide {
+    grid-column: auto;
+  }
+}

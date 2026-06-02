@@ -1,0 +1,12 @@
+{
+  "name": "tradyburger-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "check": "node scripts/check-static.mjs"
+  },
+  "devDependencies": {
+    "netlify-cli": "^18.0.0"
+  }
+}
