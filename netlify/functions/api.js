@@ -298,6 +298,13 @@ function cleanPhone(phone = "") {
   return String(phone).replace(/\D/g, "");
 }
 
+function whatsappRecipientCandidates(phone = "") {
+  const cleaned = cleanPhone(phone);
+  const candidates = [cleaned];
+  if (cleaned.startsWith("54911")) candidates.push(`5411${cleaned.slice(5)}`);
+  return [...new Set(candidates.filter(Boolean))];
+}
+
 function isWhatsappAdmin(phone) {
   const admins = String(process.env.WHATSAPP_ADMIN_NUMBERS || "")
     .split(",")
@@ -355,22 +362,30 @@ async function sendWhatsAppText(to, text) {
 
   const results = [];
   for (const chunk of splitWhatsAppText(text)) {
-    const res = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: cleanPhone(to),
-        type: "text",
-        text: { preview_url: false, body: chunk }
-      })
-    });
-    const payload = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(payload?.error?.message || `WhatsApp send ${res.status}`);
-    results.push(payload);
+    let lastError = null;
+    for (const candidate of whatsappRecipientCandidates(to)) {
+      const res = await fetch(`https://graph.facebook.com/${graphVersion}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: candidate,
+          type: "text",
+          text: { preview_url: false, body: chunk }
+        })
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (res.ok) {
+        results.push(payload);
+        lastError = null;
+        break;
+      }
+      lastError = payload?.error?.message || `WhatsApp send ${res.status}`;
+    }
+    if (lastError) throw new Error(lastError);
   }
   return { sent: true, results };
 }
