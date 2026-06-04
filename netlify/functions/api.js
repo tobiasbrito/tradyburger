@@ -799,10 +799,19 @@ async function handleWhatsAppWebhook(event) {
 
   const body = event.body ? JSON.parse(event.body) : {};
   const messages = extractWhatsAppMessages(body);
+  if (!messages.length) {
+    console.info("WhatsApp webhook received without text messages");
+  }
   const results = [];
 
   for (const message of messages) {
     if (!message.from) continue;
+    console.info("WhatsApp inbound message", {
+      from: message.from,
+      message_id: message.id,
+      type: message.type,
+      text: message.text
+    });
     if (message.type !== "text") {
       const reply = "Por ahora puedo leer mensajes de texto. Escribime el pedido y te ayudo.";
       await sendWhatsAppText(message.from, reply).catch(() => null);
@@ -815,8 +824,16 @@ async function handleWhatsAppWebhook(event) {
       customer_phone: message.from,
       message: message.text
     });
-    await sendWhatsAppText(message.from, bot.reply);
-    results.push({ from: message.from, message_id: message.id, step: bot.step, reply: bot.reply });
+    const result = { from: message.from, message_id: message.id, step: bot.step, reply: bot.reply };
+    try {
+      await sendWhatsAppText(message.from, bot.reply);
+      result.sent = true;
+    } catch (error) {
+      result.sent = false;
+      result.send_error = error.message;
+      console.error("WhatsApp reply failed", result);
+    }
+    results.push(result);
   }
 
   return response(200, { ok: true, processed: results.length, results });
