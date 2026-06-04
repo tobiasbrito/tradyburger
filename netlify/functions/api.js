@@ -81,7 +81,43 @@ function money(value) {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(value);
 }
 
+const orderMetaPattern = /\n\n\[admin_meta:(\{.*\})\]$/s;
+
+function parseOrderMeta(notes = "") {
+  const match = String(notes || "").match(orderMetaPattern);
+  if (!match) return { cleanNotes: notes || "", meta: {} };
+  try {
+    return {
+      cleanNotes: String(notes || "").replace(orderMetaPattern, ""),
+      meta: JSON.parse(match[1])
+    };
+  } catch {
+    return { cleanNotes: notes || "", meta: {} };
+  }
+}
+
+function withOrderMeta(notes = "", patch = {}) {
+  const current = parseOrderMeta(notes);
+  const meta = {
+    ...current.meta,
+    ...(patch.is_paid !== undefined ? { is_paid: Boolean(patch.is_paid) } : {}),
+    ...(patch.delivery_driver !== undefined ? { delivery_driver: patch.delivery_driver || "" } : {})
+  };
+  return `${current.cleanNotes || ""}\n\n[admin_meta:${JSON.stringify(meta)}]`;
+}
+
+function decorateOrder(order) {
+  const { cleanNotes, meta } = parseOrderMeta(order.notes || "");
+  return {
+    ...order,
+    notes: cleanNotes,
+    is_paid: order.is_paid !== undefined && order.is_paid !== null ? Boolean(order.is_paid) : Boolean(meta.is_paid),
+    delivery_driver: order.delivery_driver !== undefined && order.delivery_driver !== null ? order.delivery_driver : meta.delivery_driver || ""
+  };
+}
+
 function buildWhatsAppSummary(order, items, settings) {
+  const cleanNotes = parseOrderMeta(order.notes || "").cleanNotes;
   const lines = [
     `Nuevo pedido ${settings.business_name}`,
     "",
@@ -93,7 +129,7 @@ function buildWhatsAppSummary(order, items, settings) {
     `Entrega: ${order.delivery_type}`,
     `Direccion: ${order.address || "Retiro en local"}`,
     `Pago: ${order.payment_method}`,
-    `Notas: ${order.notes || "Sin notas"}`,
+    `Notas: ${cleanNotes || "Sin notas"}`,
     "",
     `Pedido guardado: ${order.id}`
   ];
@@ -1115,19 +1151,40 @@ exports.handler = async (event) => {
     if (method === "GET" && route === "orders") {
       if (!isAdmin(event)) return response(401, { error: "Admin password required" });
       const orders = await supabase("orders", { query: "select=*&order=created_at.desc" });
-      return response(200, orders);
+      return response(200, orders.map(decorateOrder));
     }
 
     if (method === "PATCH" && route.startsWith("orders/")) {
       if (!isAdmin(event)) return response(401, { error: "Admin password required" });
       const id = route.split("/")[1];
-      if (!orderStatuses.has(body.status)) return response(400, { error: "Invalid status" });
-      const order = await supabase("orders", {
-        method: "PATCH",
-        query: `id=eq.${encodeURIComponent(id)}`,
-        body: { status: body.status }
-      });
-      return response(200, order[0]);
+      if (body.status !== undefined && !orderStatuses.has(body.status)) return response(400, { error: "Invalid status" });
+      const patch = {
+        ...(body.status !== undefined ? { status: body.status } : {}),
+        ...(body.is_paid !== undefined ? { is_paid: Boolean(body.is_paid) } : {}),
+        ...(body.delivery_driver !== undefined ? { delivery_driver: body.delivery_driver || "" } : {})
+      };
+
+      try {
+        const order = await supabase("orders", {
+          method: "PATCH",
+          query: `id=eq.${encodeURIComponent(id)}`,
+          body: patch
+        });
+        return response(200, decorateOrder(order[0]));
+      } catch (error) {
+        if (body.is_paid === undefined && body.delivery_driver === undefined) throw error;
+        const current = (await supabase("orders", { query: `select=*&id=eq.${encodeURIComponent(id)}&limit=1` }))[0];
+        const fallbackPatch = {
+          ...(body.status !== undefined ? { status: body.status } : {}),
+          notes: withOrderMeta(current?.notes || "", patch)
+        };
+        const order = await supabase("orders", {
+          method: "PATCH",
+          query: `id=eq.${encodeURIComponent(id)}`,
+          body: fallbackPatch
+        });
+        return response(200, decorateOrder(order[0]));
+      }
     }
 
     if (method === "GET" && route === "bot/demo") {

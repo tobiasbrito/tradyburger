@@ -125,20 +125,24 @@ export async function saveProduct(product, adminPassword) {
   }
 }
 
-export async function updateOrderStatus(orderId, status, adminPassword) {
+export async function updateOrder(orderId, patch, adminPassword) {
   try {
     return api(`orders/${orderId}`, {
       method: "PATCH",
       adminPassword,
-      body: JSON.stringify({ status })
+      body: JSON.stringify(patch)
     });
   } catch {
     const store = await getDemoStore();
     const order = store.orders.find((item) => item.id === orderId);
-    if (order) order.status = status;
+    if (order) Object.assign(order, patch);
     saveDemoStore(store);
     return order;
   }
+}
+
+export async function updateOrderStatus(orderId, status, adminPassword) {
+  return updateOrder(orderId, { status }, adminPassword);
 }
 
 export async function createOrder(order) {
@@ -167,8 +171,10 @@ export async function createOrder(order) {
       delivery_type: order.delivery_type,
       address: order.address || "",
       payment_method: order.payment_method,
+      is_paid: false,
       total,
       status: "pendiente",
+      delivery_driver: "",
       notes: order.notes || "",
       created_at: new Date().toISOString(),
       items

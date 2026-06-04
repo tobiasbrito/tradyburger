@@ -1,4 +1,4 @@
-import { getAdminData, money, saveProduct, updateOrderStatus } from "./store.js";
+import { getAdminData, money, saveProduct, updateOrder } from "./store.js";
 
 const loginPanel = document.getElementById("loginPanel");
 const dashboard = document.getElementById("dashboard");
@@ -17,6 +17,7 @@ const fallbackImage = "../assets/tradi-burgerrr-3d-transparent.png";
 let adminPassword = localStorage.getItem(adminKey) || "";
 let products = [];
 let orders = [];
+const driverOptions = ["", "Repartidor 1", "Repartidor 2", "Repartidor 3", "Local"];
 
 function currentImageUrl() {
   return productForm.elements.image_url.value.trim() || fallbackImage;
@@ -91,20 +92,38 @@ function renderProducts() {
 
 function renderOrders() {
   ordersTable.innerHTML = orders.length ? orders.map((order) => `
-    <tr>
-      <td><strong>${order.id}</strong><br>${order.delivery_type || ""} ${order.address ? `- ${order.address}` : ""}</td>
+    <tr class="order-row order-row--${order.status || "pendiente"}">
+      <td>
+        <strong>${order.delivery_type === "envio" ? "Envio" : "Retiro"}</strong>
+        ${order.address ? `<br><span>${order.address}</span><br><a class="mini-link" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}" target="_blank" rel="noreferrer">Ver mapa</a>` : "<br><span>Retira en local</span>"}
+        ${order.notes ? `<br><small>${order.notes}</small>` : ""}
+      </td>
       <td>${order.customer_name}<br><small>${order.customer_phone || ""}</small></td>
       <td>${money(order.total || 0)}</td>
       <td>
-        <select data-order-status="${order.id}">
+        <select data-order-field="is_paid" data-order-id="${order.id}">
+          <option value="false" ${order.is_paid ? "" : "selected"}>No pago</option>
+          <option value="true" ${order.is_paid ? "selected" : ""}>Pago</option>
+        </select>
+        <small>${order.payment_method || ""}</small>
+      </td>
+      <td>
+        <select data-order-field="status" data-order-id="${order.id}">
           ${["pendiente", "confirmado", "preparado", "entregado", "cancelado"].map((status) => `
             <option value="${status}" ${order.status === status ? "selected" : ""}>${status}</option>
           `).join("")}
         </select>
       </td>
+      <td>
+        <select data-order-field="delivery_driver" data-order-id="${order.id}" ${order.delivery_type === "envio" ? "" : "disabled"}>
+          ${driverOptions.map((driver) => `
+            <option value="${driver}" ${(order.delivery_driver || "") === driver ? "selected" : ""}>${driver || (order.delivery_type === "envio" ? "Sin asignar" : "Retiro")}</option>
+          `).join("")}
+        </select>
+      </td>
       <td>${order.created_at ? new Date(order.created_at).toLocaleString("es-AR") : ""}</td>
     </tr>
-  `).join("") : `<tr><td colspan="5">Todavia no hay pedidos.</td></tr>`;
+  `).join("") : `<tr><td colspan="7">Todavia no hay pedidos.</td></tr>`;
 }
 
 async function load() {
@@ -193,9 +212,10 @@ productForm.addEventListener("submit", async (event) => {
 });
 
 ordersTable.addEventListener("change", async (event) => {
-  const select = event.target.closest("[data-order-status]");
+  const select = event.target.closest("[data-order-field]");
   if (!select) return;
-  await updateOrderStatus(select.dataset.orderStatus, select.value, adminPassword);
+  const value = select.dataset.orderField === "is_paid" ? select.value === "true" : select.value;
+  await updateOrder(select.dataset.orderId, { [select.dataset.orderField]: value }, adminPassword);
   await load();
 });
 

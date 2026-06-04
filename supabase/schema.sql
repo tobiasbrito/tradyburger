@@ -19,8 +19,10 @@ create table if not exists public.orders (
   delivery_type text not null check (delivery_type in ('retiro', 'envio')),
   address text,
   payment_method text not null,
+  is_paid boolean not null default false,
   total integer not null check (total >= 0),
   status text not null default 'pendiente' check (status in ('pendiente', 'confirmado', 'preparado', 'entregado', 'cancelado')),
+  delivery_driver text,
   notes text,
   created_at timestamptz not null default now()
 );
