@@ -342,7 +342,7 @@ function editDistance(a = "", b = "") {
 
 function tokenLooksLike(token, candidate) {
   if (!token || !candidate) return false;
-  if (candidate.includes(token) || token.includes(candidate)) return true;
+  if ((token.length >= 3 && candidate.includes(token)) || (candidate.length >= 4 && token.includes(candidate))) return true;
   if (token.length < 4 || candidate.length < 4) return false;
   const distance = editDistance(token, candidate);
   const allowed = Math.max(1, Math.floor(Math.min(token.length, candidate.length) / 4));
