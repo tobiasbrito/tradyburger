@@ -16,6 +16,11 @@
     }
 
     * { box-sizing: border-box; }
+
+    html.chat-lock,
+    html.chat-lock body {
+      overflow: hidden;
+    }
     html { scroll-behavior: smooth; }
 
     body {
@@ -523,9 +528,7 @@
     .item p { margin: 0; }
 
     .menu-order {
-      display: grid;
-      grid-template-columns: 96px 1fr;
-      gap: 10px;
+      display: flex;
       margin-top: 4px;
       align-items: center;
     }
@@ -538,6 +541,7 @@
     }
 
     .add-menu {
+      width: 100%;
       min-height: 46px;
       border: 0;
       border-radius: 8px;
@@ -727,22 +731,59 @@
       position: fixed;
       right: 20px;
       bottom: 20px;
-      z-index: 20;
-      min-width: 64px;
-      min-height: 64px;
-      padding: 0 18px;
+      z-index: 45;
+      width: 106px;
+      height: 106px;
+      display: grid;
+      place-items: center;
+      padding: 0;
       color: #0d0904;
-      background: var(--yellow);
-      box-shadow: 0 0 28px rgba(255, 229, 0, .45), 0 18px 36px rgba(0, 0, 0, .44);
+      border: 1px solid rgba(255, 229, 0, .64);
+      border-radius: 999px;
+      background: radial-gradient(circle at 50% 42%, rgba(255, 229, 0, .86), rgba(255, 229, 0, .28) 45%, rgba(6, 5, 3, .9) 76%);
+      box-shadow: 0 0 28px rgba(255, 229, 0, .54), 0 18px 36px rgba(0, 0, 0, .44);
+      isolation: isolate;
+      overflow: visible;
+      animation: chatFloat 4.2s ease-in-out infinite;
+    }
+
+    .chat-toggle::before,
+    .chat-toggle::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      z-index: -1;
+      border-radius: inherit;
+      border: 1px solid rgba(255, 229, 0, .46);
+      animation: chatRadar 2.6s ease-out infinite;
+    }
+
+    .chat-toggle::after {
+      inset: -17px;
+      animation-delay: .9s;
+    }
+
+    .chat-toggle img {
+      width: 92px;
+      height: 92px;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 14px rgba(0, 0, 0, .42));
+      animation: botWave 1.9s ease-in-out infinite;
+      transform-origin: 38% 82%;
+    }
+
+    .chat-toggle:focus-visible {
+      outline: 3px solid white;
+      outline-offset: 7px;
     }
 
     .chat-panel {
       position: fixed;
       right: 20px;
-      bottom: 94px;
-      z-index: 21;
+      bottom: 130px;
+      z-index: 50;
       width: min(440px, calc(100vw - 32px));
-      max-height: min(760px, calc(100vh - 118px));
+      height: min(740px, calc(100vh - 150px));
       display: none;
       overflow: hidden;
       border-radius: 8px;
@@ -754,6 +795,14 @@
     .chat-panel.open {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .chat-frame {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: 0;
+      background: rgba(8, 7, 6, .94);
     }
 
     .chat-head {
@@ -928,6 +977,22 @@
       50% { transform: translateY(-22px); }
     }
 
+    @keyframes chatFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes chatRadar {
+      0% { transform: scale(.82); opacity: .8; }
+      100% { transform: scale(1.22); opacity: 0; }
+    }
+
+    @keyframes botWave {
+      0%, 100% { transform: rotate(-2deg) scale(1); }
+      45% { transform: rotate(5deg) scale(1.05); }
+      68% { transform: rotate(-4deg) scale(1.02); }
+    }
+
     @keyframes drift {
       0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
       12% { opacity: .82; }
@@ -1059,7 +1124,7 @@
       }
 
       .menu-order {
-        grid-template-columns: 82px 1fr;
+        display: flex;
       }
 
       .map-card {
@@ -1113,11 +1178,6 @@
         padding: 14px;
       }
 
-      .menu-order {
-        grid-template-columns: 76px 1fr;
-      }
-
-      .menu-qty,
       .add-menu {
         min-height: 48px;
       }
@@ -1144,12 +1204,51 @@
         backdrop-filter: blur(14px);
       }
 
-      .chat-toggle { display: none; }
-      .chat-panel {
-        right: 14px;
+      .chat-toggle {
+        right: 12px;
         bottom: 92px;
-        width: calc(100vw - 28px);
-        max-height: calc(100svh - 112px);
+        width: 82px;
+        height: 82px;
+      }
+
+      .chat-toggle img {
+        width: 72px;
+        height: 72px;
+      }
+
+      .chat-panel {
+        inset: 0;
+        width: auto;
+        height: 100svh;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        z-index: 80;
+      }
+
+      html.chat-lock .cta-row,
+      html.chat-lock .chat-toggle {
+        display: none;
+      }
+
+      .chat-head {
+        min-height: 72px;
+        padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+      }
+
+      .bot-avatar {
+        width: 44px;
+        height: 44px;
+      }
+
+      .bot-name strong {
+        font-size: 17px;
+      }
+
+      .chat-close {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
       }
 
       .fries-rain { display: none; }
@@ -1242,17 +1341,17 @@
         <h2>Bot de pedidos</h2>
         <p>Armalo en 30 segundos y mandalo directo al numero del local.</p>
         <button class="button" type="button" data-open-chat>Iniciar bot</button>
-        <a class="button secondary" href="bot/">Probar bot demo</a>
-        <a class="button secondary" href="admin/">Panel admin</a>
       </div>
     </section>
   </main>
 
-  <button class="chat-toggle" type="button" data-open-chat>Pedido</button>
+  <button class="chat-toggle" type="button" data-toggle-chat aria-label="Abrir o cerrar el bot de pedidos" aria-controls="chatPanel" aria-expanded="false">
+    <img src="assets/tradi-bot-wave.png" alt="">
+  </button>
   <section class="chat-panel" id="chatPanel" aria-label="Bot de pedidos">
     <div class="chat-head">
       <div class="bot-identity">
-        <img class="bot-avatar" src="assets/tradi-bot-avatar.png" alt="Tradi">
+        <img class="bot-avatar" src="assets/tradi-bot-wave.png" alt="Tradi">
         <span class="bot-name">
           <strong>Tradi</strong>
           <small>Bot de pedidos y despacho</small>
@@ -1260,49 +1359,7 @@
       </div>
       <button class="chat-close" type="button" data-close-chat aria-label="Cerrar">x</button>
     </div>
-    <form class="chat-body" id="orderForm">
-      <div class="bot-line">Hola, soy Tradi. Agrega productos desde la carta o ajusta cantidades aca; despues preparo el WhatsApp para despacho.</div>
-      <div class="qty-grid" id="qtyGrid"></div>
-      <label>
-        Nombre
-        <input name="customer" autocomplete="name" placeholder="Tu nombre" required>
-      </label>
-      <label>
-        Telefono
-        <input name="phone" autocomplete="tel" placeholder="Ej: 11 6258 8633">
-      </label>
-      <label>
-        Entrega
-        <select name="delivery_type">
-          <option value="retiro">Retiro en local</option>
-          <option value="envio">Envio a domicilio</option>
-        </select>
-      </label>
-      <label class="address-field">
-        Direccion de entrega
-        <textarea name="address" autocomplete="street-address" placeholder="Ej: Av. Rivadavia 1234, piso/depto, barrio, entre calles o referencia" required></textarea>
-        <span class="field-help">Pone calle, numero, barrio y una referencia para que el repartidor llegue sin vueltas.</span>
-      </label>
-      <label>
-        Forma de pago
-        <select name="payment">
-          <option>Efectivo</option>
-          <option>Transferencia</option>
-          <option>Mercado Pago</option>
-        </select>
-      </label>
-      <label>
-        Aclaraciones
-        <textarea name="notes" placeholder="Sin cebolla, extra cheddar, horario, etc."></textarea>
-      </label>
-      <div class="chat-actions">
-        <div class="chat-total">
-          <span>Total estimado</span>
-          <strong id="orderTotal">$0</strong>
-        </div>
-        <button class="chat-send" type="submit">Enviar pedido por WhatsApp</button>
-      </div>
-    </form>
+    <iframe class="chat-frame" title="Tradi Bot de pedidos" src="bot/?embed=1"></iframe>
   </section>
 
   <footer>Tradi Burgerrr - Desde 2024 - Web lista para tomar pedidos.</footer>
