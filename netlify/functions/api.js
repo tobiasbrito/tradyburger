@@ -82,6 +82,7 @@ function money(value) {
 }
 
 const orderMetaPattern = /\n\n\[admin_meta:(\{.*\})\]$/s;
+const settingsMetaPattern = /\n\n\[settings_meta:(\{.*\})\]$/s;
 
 function parseOrderMeta(notes = "") {
   const match = String(notes || "").match(orderMetaPattern);
@@ -113,6 +114,37 @@ function decorateOrder(order) {
     notes: cleanNotes,
     is_paid: order.is_paid !== undefined && order.is_paid !== null ? Boolean(order.is_paid) : Boolean(meta.is_paid),
     delivery_driver: order.delivery_driver !== undefined && order.delivery_driver !== null ? order.delivery_driver : meta.delivery_driver || ""
+  };
+}
+
+function parseSettingsMeta(openingHours = "") {
+  const match = String(openingHours || "").match(settingsMetaPattern);
+  if (!match) return { cleanOpeningHours: openingHours || "", meta: {} };
+  try {
+    return {
+      cleanOpeningHours: String(openingHours || "").replace(settingsMetaPattern, ""),
+      meta: JSON.parse(match[1])
+    };
+  } catch {
+    return { cleanOpeningHours: openingHours || "", meta: {} };
+  }
+}
+
+function withSettingsMeta(settings, patch = {}) {
+  const current = parseSettingsMeta(settings.opening_hours || "");
+  const meta = {
+    ...current.meta,
+    ...(patch.delivery_drivers !== undefined ? { delivery_drivers: patch.delivery_drivers } : {})
+  };
+  return `${current.cleanOpeningHours || ""}\n\n[settings_meta:${JSON.stringify(meta)}]`;
+}
+
+function decorateSettings(settings) {
+  const current = parseSettingsMeta(settings.opening_hours || "");
+  return {
+    ...settings,
+    opening_hours: current.cleanOpeningHours,
+    delivery_drivers: Array.isArray(current.meta.delivery_drivers) ? current.meta.delivery_drivers : []
   };
 }
 
@@ -150,14 +182,16 @@ async function getAllProducts() {
 
 async function getSettings() {
   const rows = await supabase("settings", { query: "select=*&limit=1" });
-  return rows[0] || {
+  const fallback = {
     business_name: "Tradi Burgerrr",
     whatsapp_number: "5491162588633",
     address: "Fraga 2900 - B. San Eduardo - Merlo",
     opening_hours: "Lunes a Domingo 20hs a 23:45hs",
     delivery_enabled: true,
-    delivery_cost: 0
+    delivery_cost: 0,
+    delivery_drivers: []
   };
+  return rows[0] ? decorateSettings(rows[0]) : fallback;
 }
 
 function botMenuText(categories) {
@@ -1101,6 +1135,23 @@ exports.handler = async (event) => {
 
     if (method === "GET" && route === "settings") {
       return response(200, await getSettings());
+    }
+
+    if (method === "PATCH" && route === "settings") {
+      if (!isAdmin(event)) return response(401, { error: "Admin password required" });
+      const current = (await supabase("settings", { query: "select=*&limit=1" }))[0];
+      if (!current) return response(404, { error: "Settings not found" });
+      const drivers = Array.isArray(body.delivery_drivers)
+        ? body.delivery_drivers.map((item) => String(item || "").trim()).filter(Boolean)
+        : undefined;
+      const settings = await supabase("settings", {
+        method: "PATCH",
+        query: `id=eq.${encodeURIComponent(current.id)}`,
+        body: {
+          ...(drivers !== undefined ? { opening_hours: withSettingsMeta(current, { delivery_drivers: drivers }) } : {})
+        }
+      });
+      return response(200, decorateSettings(settings[0]));
     }
 
     if (method === "GET" && route === "menu") {

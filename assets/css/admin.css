@@ -149,6 +149,75 @@ button.secondary {
   padding: 16px;
 }
 
+.metrics-grid,
+.ops-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.metrics-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.ops-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metric-card,
+.ops-card,
+.drivers-form {
+  border: 1px solid rgba(255, 229, 0, .22);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .26);
+}
+
+.metric-card {
+  min-height: 92px;
+  padding: 14px;
+}
+
+.metric-card span,
+.ops-line span {
+  color: rgba(255, 255, 255, .7);
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--yellow);
+  font-size: 26px;
+}
+
+.ops-card {
+  min-height: 170px;
+  padding: 16px;
+}
+
+.ops-card h2 {
+  margin: 0 0 12px;
+  color: var(--soft);
+  font-size: 16px;
+}
+
+.ops-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+}
+
+.driver-chip {
+  display: inline-flex;
+  margin: 0 8px 8px 0;
+  border: 1px solid rgba(255, 229, 0, .25);
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--yellow);
+  background: rgba(255, 229, 0, .08);
+  font-weight: 900;
+}
+
 .product-form .wide { grid-column: span 4; }
 
 .image-picker {
@@ -199,6 +268,41 @@ button.secondary {
   display: flex;
   gap: 10px;
   align-items: end;
+}
+
+.drivers-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 360px) auto 1fr;
+  gap: 12px;
+  align-items: end;
+  padding: 14px;
+}
+
+.drivers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drivers-list li {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 229, 0, .18);
+  border-radius: 999px;
+  padding: 4px 4px 4px 10px;
+  background: rgba(255, 255, 255, .06);
+}
+
+.drivers-list button {
+  min-height: 32px;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
 }
 
 .table-wrap {
@@ -300,6 +404,8 @@ th {
 }
 
 @media (max-width: 780px) {
+  .metrics-grid,
+  .ops-grid,
   .product-form {
     grid-template-columns: 1fr;
   }
@@ -309,6 +415,10 @@ th {
   }
 
   .image-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .drivers-form {
     grid-template-columns: 1fr;
   }
 }

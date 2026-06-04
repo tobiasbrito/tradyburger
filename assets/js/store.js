@@ -95,6 +95,21 @@ export async function getAdminData(adminPassword) {
   }
 }
 
+export async function saveSettings(settingsPatch, adminPassword) {
+  try {
+    return api("settings", {
+      method: "PATCH",
+      adminPassword,
+      body: JSON.stringify(settingsPatch)
+    });
+  } catch {
+    const store = await getDemoStore();
+    store.settings = { ...store.settings, ...settingsPatch };
+    saveDemoStore(store);
+    return store.settings;
+  }
+}
+
 export async function saveProduct(product, adminPassword) {
   try {
     if (product.id) {

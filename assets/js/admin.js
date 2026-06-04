@@ -1,4 +1,4 @@
-import { getAdminData, money, saveProduct, updateOrder } from "./store.js";
+import { getAdminData, money, saveProduct, saveSettings, updateOrder } from "./store.js";
 
 const loginPanel = document.getElementById("loginPanel");
 const dashboard = document.getElementById("dashboard");
@@ -6,6 +6,10 @@ const loginForm = document.getElementById("loginForm");
 const productForm = document.getElementById("productForm");
 const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
+const dashboardStats = document.getElementById("dashboardStats");
+const dashboardLists = document.getElementById("dashboardLists");
+const driversForm = document.getElementById("driversForm");
+const driversList = document.getElementById("driversList");
 const businessName = document.getElementById("businessName");
 const modeBadge = document.getElementById("modeBadge");
 const imagePickerButton = document.getElementById("imagePickerButton");
@@ -17,7 +21,8 @@ const fallbackImage = "../assets/tradi-burgerrr-3d-transparent.png";
 let adminPassword = localStorage.getItem(adminKey) || "";
 let products = [];
 let orders = [];
-const driverOptions = ["", "Repartidor 1", "Repartidor 2", "Repartidor 3", "Local"];
+let settings = {};
+let driverOptions = [];
 
 function currentImageUrl() {
   return productForm.elements.image_url.value.trim() || fallbackImage;
@@ -90,6 +95,57 @@ function renderProducts() {
   `).join("");
 }
 
+function todayOrders() {
+  const today = new Date().toLocaleDateString("es-AR");
+  return orders.filter((order) => order.created_at && new Date(order.created_at).toLocaleDateString("es-AR") === today);
+}
+
+function renderDashboardPanel() {
+  const todays = todayOrders();
+  const activeOrders = orders.filter((order) => !["entregado", "cancelado"].includes(order.status));
+  const pendingDelivery = orders.filter((order) => order.delivery_type === "envio" && !order.delivery_driver && !["entregado", "cancelado"].includes(order.status));
+  const unpaid = orders.filter((order) => !order.is_paid && order.status !== "cancelado");
+  const revenueToday = todays.filter((order) => order.status !== "cancelado").reduce((sum, order) => sum + Number(order.total || 0), 0);
+  dashboardStats.innerHTML = [
+    ["Pedidos hoy", todays.length],
+    ["Facturacion hoy", money(revenueToday)],
+    ["Activos", activeOrders.length],
+    ["Sin repartidor", pendingDelivery.length],
+    ["Sin cobrar", unpaid.length],
+    ["Productos activos", products.filter((product) => product.is_active !== false).length]
+  ].map(([label, value]) => `
+    <article class="metric-card">
+      <span>${label}</span>
+      <strong>${value}</strong>
+    </article>
+  `).join("");
+
+  dashboardLists.innerHTML = `
+    <article class="ops-card">
+      <h2>Pedidos activos</h2>
+      ${activeOrders.length ? activeOrders.slice(0, 6).map((order) => `
+        <div class="ops-line">
+          <span>${order.customer_name} · ${order.delivery_type === "envio" ? "Envio" : "Retiro"}</span>
+          <strong>${money(order.total || 0)}</strong>
+        </div>
+      `).join("") : "<p>No hay pedidos activos.</p>"}
+    </article>
+    <article class="ops-card">
+      <h2>Repartidores</h2>
+      ${driverOptions.length ? driverOptions.map((driver) => `<span class="driver-chip">${driver}</span>`).join("") : "<p>Todavia no cargaste repartidores.</p>"}
+    </article>
+  `;
+}
+
+function renderDrivers() {
+  driversList.innerHTML = driverOptions.length ? driverOptions.map((driver) => `
+    <li>
+      <span>${driver}</span>
+      <button class="secondary" type="button" data-remove-driver="${driver}">Sacar</button>
+    </li>
+  `).join("") : `<li><span>No hay repartidores cargados.</span></li>`;
+}
+
 function renderOrders() {
   ordersTable.innerHTML = orders.length ? orders.map((order) => `
     <tr class="order-row order-row--${order.status || "pendiente"}">
@@ -116,7 +172,7 @@ function renderOrders() {
       </td>
       <td>
         <select data-order-field="delivery_driver" data-order-id="${order.id}" ${order.delivery_type === "envio" ? "" : "disabled"}>
-          ${driverOptions.map((driver) => `
+          ${["", ...driverOptions].map((driver) => `
             <option value="${driver}" ${(order.delivery_driver || "") === driver ? "selected" : ""}>${driver || (order.delivery_type === "envio" ? "Sin asignar" : "Retiro")}</option>
           `).join("")}
         </select>
@@ -130,9 +186,13 @@ async function load() {
   const data = await getAdminData(adminPassword);
   products = data.products;
   orders = data.orders;
-  businessName.textContent = data.settings?.business_name || "Tradi Burgerrr";
+  settings = data.settings || {};
+  driverOptions = Array.isArray(settings.delivery_drivers) ? settings.delivery_drivers : [];
+  businessName.textContent = settings.business_name || "Tradi Burgerrr";
   modeBadge.textContent = data.mode === "supabase" ? "Conectado a Supabase" : "Modo demo local";
+  renderDashboardPanel();
   renderProducts();
+  renderDrivers();
   renderOrders();
   showDashboard();
 }
@@ -216,6 +276,27 @@ ordersTable.addEventListener("change", async (event) => {
   if (!select) return;
   const value = select.dataset.orderField === "is_paid" ? select.value === "true" : select.value;
   await updateOrder(select.dataset.orderId, { [select.dataset.orderField]: value }, adminPassword);
+  await load();
+});
+
+driversForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = driversForm.elements.driver_name;
+  const name = String(input.value || "").trim();
+  if (!name) return;
+  const normalized = name.toLowerCase();
+  if (!driverOptions.some((driver) => driver.toLowerCase() === normalized)) {
+    await saveSettings({ delivery_drivers: [...driverOptions, name] }, adminPassword);
+  }
+  input.value = "";
+  await load();
+});
+
+driversList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-remove-driver]");
+  if (!button) return;
+  const nextDrivers = driverOptions.filter((driver) => driver !== button.dataset.removeDriver);
+  await saveSettings({ delivery_drivers: nextDrivers }, adminPassword);
   await load();
 });
 
