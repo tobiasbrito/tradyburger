@@ -191,9 +191,37 @@ function parseDeliveryType(text) {
 function parsePayment(text) {
   const normalized = normalizeText(text);
   if (/(mercado|mp)/.test(normalized)) return "Mercado Pago";
-  if (/(trans|alias|cvu)/.test(normalized)) return "Transferencia";
+  if (/(trans|tranfe|transfer|alias|cvu)/.test(normalized)) return "Transferencia";
   if (/(efectivo|cash)/.test(normalized)) return "Efectivo";
   return text.trim();
+}
+
+function extractAddressNumber(text = "") {
+  const match = String(text).match(/\b\d{1,6}\b/);
+  return match ? match[0] : "";
+}
+
+function stripAddressNumber(text = "") {
+  return String(text || "")
+    .replace(/\b\d{1,6}\b/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeOptionalReference(text = "") {
+  const normalized = normalizeText(text);
+  if (/^(no|sin|ninguna|ninguno|no tengo|no se)\b/.test(normalized)) return "";
+  return String(text || "").trim();
+}
+
+function formatDeliveryAddress(state = {}) {
+  const parts = [];
+  const streetLine = [state.address_street, state.address_number].filter(Boolean).join(" ").trim();
+  if (streetLine) parts.push(streetLine);
+  else if (state.address) parts.push(state.address);
+  if (state.address_cross) parts.push(`Entre calles: ${state.address_cross}`);
+  if (state.address_reference) parts.push(`Referencia: ${state.address_reference}`);
+  return parts.join(" | ");
 }
 
 function productScore(product, tokens) {
@@ -535,15 +563,37 @@ async function handleBotDemo(body) {
     state.delivery_type = normalized.includes("env") ? "envio" : "retiro";
     if (state.delivery_type === "envio") {
       session.step = "address";
-      reply = "Pasame la direccion completa para el envio.";
+      reply = "Perfecto, pasame la calle y numero para el envio.";
     } else {
       session.step = "payment";
       reply = "Forma de pago: efectivo, transferencia o Mercado Pago?";
     }
   } else if (session.step === "address") {
-    state.address = text;
+    state.address_number = extractAddressNumber(text);
+    state.address_street = state.address_number ? stripAddressNumber(text) : text;
+    state.address = formatDeliveryAddress(state);
+    if (!state.address_number) {
+      session.step = "address_number";
+      reply = "Me pasas la altura o numero de la casa? Despues te pido las entre calles.";
+    } else {
+      session.step = "address_cross";
+      reply = "Gracias. Ahora pasame las entre calles. Ejemplo: entre Jose Marti y Arevalo.";
+    }
+  } else if (session.step === "address_number") {
+    state.address_number = extractAddressNumber(text) || text;
+    state.address = formatDeliveryAddress(state);
+    session.step = "address_cross";
+    reply = "Perfecto. Pasame las entre calles. Ejemplo: entre Jose Marti y Arevalo.";
+  } else if (session.step === "address_cross") {
+    state.address_cross = text;
+    state.address = formatDeliveryAddress(state);
+    session.step = "address_reference";
+    reply = "Tenes alguna referencia para el repartidor? Ejemplo: porton negro, casa de rejas, kiosco enfrente. Si no tenes, escribi no.";
+  } else if (session.step === "address_reference") {
+    state.address_reference = normalizeOptionalReference(text);
+    state.address = formatDeliveryAddress(state);
     session.step = "payment";
-    reply = "Forma de pago: efectivo, transferencia o Mercado Pago?";
+    reply = `Direccion anotada: ${state.address}\n\nForma de pago: efectivo, transferencia o Mercado Pago?`;
   } else if (session.step === "payment") {
     state.payment_method = text;
     session.step = "confirm";
@@ -737,16 +787,38 @@ async function handleSmartBotDemo(body) {
     } else if (deliveryType === "envio") {
       state.delivery_type = "envio";
       session.step = "address";
-      reply = "Perfecto, pasame la direccion completa para el envio.";
+      reply = "Perfecto, pasame la calle y numero para el envio.";
     } else {
       state.delivery_type = "retiro";
       session.step = "payment";
       reply = `Genial, retiro en el local: ${settings.address}.\nForma de pago: efectivo, transferencia o Mercado Pago?`;
     }
   } else if (session.step === "address") {
-    state.address = text;
+    state.address_number = extractAddressNumber(text);
+    state.address_street = state.address_number ? stripAddressNumber(text) : text;
+    state.address = formatDeliveryAddress(state);
+    if (!state.address_number) {
+      session.step = "address_number";
+      reply = "Me pasas la altura o numero de la casa? Despues te pido las entre calles.";
+    } else {
+      session.step = "address_cross";
+      reply = "Gracias. Ahora pasame las entre calles. Ejemplo: entre Jose Marti y Arevalo.";
+    }
+  } else if (session.step === "address_number") {
+    state.address_number = extractAddressNumber(text) || text;
+    state.address = formatDeliveryAddress(state);
+    session.step = "address_cross";
+    reply = "Perfecto. Pasame las entre calles. Ejemplo: entre Jose Marti y Arevalo.";
+  } else if (session.step === "address_cross") {
+    state.address_cross = text;
+    state.address = formatDeliveryAddress(state);
+    session.step = "address_reference";
+    reply = "Tenes alguna referencia para el repartidor? Ejemplo: porton negro, casa de rejas, kiosco enfrente. Si no tenes, escribi no.";
+  } else if (session.step === "address_reference") {
+    state.address_reference = normalizeOptionalReference(text);
+    state.address = formatDeliveryAddress(state);
     session.step = "payment";
-    reply = "Direccion anotada. Forma de pago: efectivo, transferencia o Mercado Pago?";
+    reply = `Direccion anotada: ${state.address}\n\nForma de pago: efectivo, transferencia o Mercado Pago?`;
   } else if (session.step === "payment") {
     state.payment_method = parsePayment(text);
     session.step = "confirm";
