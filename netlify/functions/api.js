@@ -401,8 +401,21 @@ function findProduct(text, products, category) {
     "sumame",
     "pone",
     "dame",
+    "mandame",
+    "pasame",
+    "haceme",
+    "necesito",
+    "quisiera",
     "pedir",
     "pedido",
+    "hola",
+    "holaa",
+    "holaaa",
+    "buenas",
+    "buen",
+    "dia",
+    "tardes",
+    "noches",
     "con",
     "sin",
     "solo",
@@ -437,6 +450,55 @@ function findProduct(text, products, category) {
     .filter((item) => item.score > 0)
     .sort((a, b) => b.score - a.score || a.product.name.length - b.product.name.length);
   return matches[0]?.product || null;
+}
+
+function stripOrderPreamble(text = "") {
+  return expandCommonFoodTypos(text)
+    .replace(/\b(hola+|buenas|buen dia|buenas tardes|buenas noches|holi)\b/g, " ")
+    .replace(/\b(quiero|queria|quisiera|me das|dame|pasame|mandame|agrega|agregar|sumame|pone|necesito|pedir|pedido)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitOrderSegments(text = "") {
+  const quantityWords = "un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez";
+  const quantityBoundary = new RegExp(`\\s+(?=(?:[1-9]|1[0-9]|20|${quantityWords})\\s+[a-z])`, "g");
+  return stripOrderPreamble(text)
+    .replace(quantityBoundary, " + ")
+    .split(/\s+(?:y|e|tambien|aparte|ademas|mas|\+)\s+|[,;+]/g)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+}
+
+function parseCompositeOrder(text, products) {
+  const segments = splitOrderSegments(text);
+  const items = [];
+  const seenSegments = new Set();
+
+  for (const segment of segments) {
+    if (seenSegments.has(segment)) continue;
+    seenSegments.add(segment);
+    const product = findProduct(segment, products);
+    if (!product) continue;
+    items.push({ product, quantity: parseQuantity(segment) });
+  }
+
+  return items;
+}
+
+function addCompositeToCart(cart, items) {
+  for (const item of items) addToCart(cart, item.product, item.quantity);
+}
+
+function compositeCartReply(items, cart) {
+  const lines = items.map((item) => `- ${item.quantity} x ${item.product.name}`);
+  return `Perfecto, te sume:\n${lines.join("\n")}\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+}
+
+function hasOrderIntent(text = "", products = []) {
+  const normalized = normalizeText(text);
+  if (parseCompositeOrder(text, products).length) return true;
+  return /(quiero|queria|quisiera|dame|mandame|agrega|sumame|pone|necesito|pedido|pedir)\b/.test(normalized);
 }
 
 function addToCart(cart, product, quantity) {
@@ -826,7 +888,7 @@ async function handleSmartBotDemo(body) {
     };
   }
 
-  if (session.last_message === "session_started" && session.step === "category" && !cart.length) {
+  if (session.last_message === "session_started" && session.step === "category" && !cart.length && !hasOrderIntent(text, products)) {
     session.last_message = text;
     await saveBotSession({ ...session, state, cart });
     return { session_id: session.id, step: session.step, reply: botWelcomeText(settings, categories) };
@@ -843,39 +905,46 @@ async function handleSmartBotDemo(body) {
     session.last_message = text;
     await saveBotSession(session);
     return { session_id: session.id, step: session.step, reply: `Listo, arrancamos de cero.\n\nCategorias:\n${botMenuText(categories)}` };
-  } else if (isGreeting(text) && session.step === "category" && !cart.length) {
+  } else if (isGreeting(text) && session.step === "category" && !cart.length && !hasOrderIntent(text, products)) {
     reply = botWelcomeText(settings, categories);
   } else if (normalized === "menu" || normalized === "ver menu") {
     session.step = "category";
     reply = `Dale, volvemos al menu.\n\nCategorias:\n${botMenuText(categories)}`;
   } else if (session.step === "category") {
-    const isPlainNumber = /^\d+$/.test(normalized);
-    const directProduct = isPlainNumber ? null : findProduct(text, products);
-    const category = findCategory(text.replace(/^ver\s+/, ""), categories);
-    const exactCategory = isExactCategoryMatch(text, category, categories);
-    if (directProduct && category && !exactCategory) {
-      const quantity = parseQuantity(text);
-      addToCart(cart, directProduct, quantity);
+    const compositeItems = parseCompositeOrder(text, products);
+    if (compositeItems.length > 1) {
+      addCompositeToCart(cart, compositeItems);
       session.step = "more";
-      reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
-    } else if (category) {
-      state.category = category.name;
-      if (category.items.length === 1) {
-        const product = category.items[0];
-        state.pending_product_id = product.id;
-        session.step = "quantity";
-        reply = `Categoria: ${category.name}.\nTenemos ${product.name} (${money(product.price)}).\nCuantas unidades queres?`;
-      } else {
-        session.step = "product";
-        reply = `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
-      }
-    } else if (directProduct) {
-      const quantity = parseQuantity(text);
-      addToCart(cart, directProduct, quantity);
-      session.step = "more";
-      reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+      reply = compositeCartReply(compositeItems, cart);
     } else {
-      reply = `No entendi esa opcion.\n\nElegi una categoria por numero o por nombre. Por ejemplo: "2", "bebidas" o "nuggets".\n\nMenu:\n${botMenuText(categories)}`;
+      const isPlainNumber = /^\d+$/.test(normalized);
+      const directProduct = isPlainNumber ? null : findProduct(text, products);
+      const category = findCategory(text.replace(/^ver\s+/, ""), categories);
+      const exactCategory = isExactCategoryMatch(text, category, categories);
+      if (directProduct && category && !exactCategory) {
+        const quantity = parseQuantity(text);
+        addToCart(cart, directProduct, quantity);
+        session.step = "more";
+        reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+      } else if (category) {
+        state.category = category.name;
+        if (category.items.length === 1) {
+          const product = category.items[0];
+          state.pending_product_id = product.id;
+          session.step = "quantity";
+          reply = `Categoria: ${category.name}.\nTenemos ${product.name} (${money(product.price)}).\nCuantas unidades queres?`;
+        } else {
+          session.step = "product";
+          reply = `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
+        }
+      } else if (directProduct) {
+        const quantity = parseQuantity(text);
+        addToCart(cart, directProduct, quantity);
+        session.step = "more";
+        reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+      } else {
+        reply = `No entendi esa opcion.\n\nElegi una categoria por numero o por nombre. Por ejemplo: "2", "bebidas" o "nuggets".\n\nMenu:\n${botMenuText(categories)}`;
+      }
     }
   } else if (session.step === "product") {
     const category = categories.find((item) => item.name === state.category);
@@ -911,9 +980,13 @@ async function handleSmartBotDemo(body) {
   } else if (session.step === "more") {
     const yesNo = parseYesNo(text);
     const correction = handleCartCorrection(text, cart, products);
+    const compositeItems = parseCompositeOrder(text, products);
     const directProduct = findProduct(text, products);
     if (correction) {
       reply = correction;
+    } else if (compositeItems.length > 1) {
+      addCompositeToCart(cart, compositeItems);
+      reply = compositeCartReply(compositeItems, cart);
     } else if (yesNo === true) {
       session.step = "category";
       reply = `De una. Elegi categoria o pedime por nombre:\n${botMenuText(categories)}`;

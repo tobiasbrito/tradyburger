@@ -40,7 +40,7 @@ async function botRequest(message = "") {
 }
 
 function repliesForStep(step) {
-  if (step === "category") return ["quiero 2 chesse simple", "ver bebidas", "carrito", "ayuda"];
+  if (step === "category") return ["quiero 2 chesse simple y una coca", "ver bebidas", "carrito", "ayuda"];
   if (step === "product") return ["1", "2", "menu", "carrito"];
   if (step === "quantity") return ["1", "2", "3"];
   if (step === "more") return ["no", "ver bebidas", "quiero una coca", "carrito"];
