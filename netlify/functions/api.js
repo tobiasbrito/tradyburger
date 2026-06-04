@@ -379,6 +379,35 @@ function findCategory(text, categories) {
   });
 }
 
+function hasGenericBurgerIntent(text = "") {
+  const normalized = normalizeText(text);
+  const saysBurger = /\b(hamburguesa|hamburguesas|hamburgesa|hamburgesas|amburguesa|amburguesas|burga|burger)\b/.test(normalized);
+  const saysSpecificSize = /\b(simple|simples|doble|dobles|triple|triples)\b/.test(normalized);
+  return saysBurger && !saysSpecificSize;
+}
+
+function burgerCategoryOptions(categories) {
+  return categories.filter((category) => /^(simples|dobles|triples)$/.test(normalizeText(category.name)));
+}
+
+function botBurgerOptionsText(categories) {
+  const options = burgerCategoryOptions(categories);
+  if (!options.length) return `Dale, te paso las hamburguesas.\n\nDecime si la queres simple, doble o triple.`;
+  return `Dale, te paso las hamburguesas. Primero decime cual queres ver:\n\n${options.map((category, index) => `${index + 1}. ${category.name}`).join("\n")}\n\nPodes responder "simple", "doble" o "triple".`;
+}
+
+function openBotCategory(category, state, session) {
+  state.category = category.name;
+  if (category.items.length === 1) {
+    const product = category.items[0];
+    state.pending_product_id = product.id;
+    session.step = "quantity";
+    return `Categoria: ${category.name}.\nTenemos ${product.name} (${money(product.price)}).\nCuantas unidades queres?`;
+  }
+  session.step = "product";
+  return `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
+}
+
 function isExactCategoryMatch(text, category, categories) {
   if (!category) return false;
   const numeric = Number.parseInt(text, 10);
@@ -398,6 +427,7 @@ function findProduct(text, products, category) {
     "queria",
     "agrega",
     "agregar",
+    "agregale",
     "sumame",
     "pone",
     "dame",
@@ -455,7 +485,7 @@ function findProduct(text, products, category) {
 function stripOrderPreamble(text = "") {
   return expandCommonFoodTypos(text)
     .replace(/\b(hola+|buenas|buen dia|buenas tardes|buenas noches|holi)\b/g, " ")
-    .replace(/\b(quiero|queria|quisiera|me das|dame|pasame|mandame|agrega|agregar|sumame|pone|necesito|pedir|pedido)\b/g, " ")
+    .replace(/\b(quiero|queria|quisiera|me das|dame|pasame|mandame|agrega|agregar|agregale|sumame|pone|necesito|pedir|pedido)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -498,7 +528,7 @@ function compositeCartReply(items, cart) {
 function hasOrderIntent(text = "", products = []) {
   const normalized = normalizeText(text);
   if (parseCompositeOrder(text, products).length) return true;
-  return /(quiero|queria|quisiera|dame|mandame|agrega|sumame|pone|necesito|pedido|pedir)\b/.test(normalized);
+  return /(quiero|queria|quisiera|dame|mandame|agrega|agregale|sumame|pone|necesito|pedido|pedir)\b/.test(normalized);
 }
 
 function addToCart(cart, product, quantity) {
@@ -919,24 +949,19 @@ async function handleSmartBotDemo(body) {
     } else {
       const isPlainNumber = /^\d+$/.test(normalized);
       const directProduct = isPlainNumber ? null : findProduct(text, products);
-      const category = findCategory(text.replace(/^ver\s+/, ""), categories);
+      const wantsBurgerOptions = hasGenericBurgerIntent(text);
+      const category = wantsBurgerOptions ? null : findCategory(text.replace(/^ver\s+/, ""), categories);
       const exactCategory = isExactCategoryMatch(text, category, categories);
       if (directProduct && category && !exactCategory) {
         const quantity = parseQuantity(text);
         addToCart(cart, directProduct, quantity);
         session.step = "more";
         reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+      } else if (wantsBurgerOptions) {
+        session.step = "category";
+        reply = botBurgerOptionsText(categories);
       } else if (category) {
-        state.category = category.name;
-        if (category.items.length === 1) {
-          const product = category.items[0];
-          state.pending_product_id = product.id;
-          session.step = "quantity";
-          reply = `Categoria: ${category.name}.\nTenemos ${product.name} (${money(product.price)}).\nCuantas unidades queres?`;
-        } else {
-          session.step = "product";
-          reply = `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
-        }
+        reply = openBotCategory(category, state, session);
       } else if (directProduct) {
         const quantity = parseQuantity(text);
         addToCart(cart, directProduct, quantity);
@@ -981,12 +1006,19 @@ async function handleSmartBotDemo(body) {
     const yesNo = parseYesNo(text);
     const correction = handleCartCorrection(text, cart, products);
     const compositeItems = parseCompositeOrder(text, products);
+    const wantsBurgerOptions = hasGenericBurgerIntent(text);
+    const category = wantsBurgerOptions ? null : findCategory(text.replace(/^ver\s+/, ""), categories);
     const directProduct = findProduct(text, products);
     if (correction) {
       reply = correction;
     } else if (compositeItems.length > 1) {
       addCompositeToCart(cart, compositeItems);
       reply = compositeCartReply(compositeItems, cart);
+    } else if (wantsBurgerOptions) {
+      session.step = "category";
+      reply = botBurgerOptionsText(categories);
+    } else if (category) {
+      reply = openBotCategory(category, state, session);
     } else if (yesNo === true) {
       session.step = "category";
       reply = `De una. Elegi categoria o pedime por nombre:\n${botMenuText(categories)}`;
