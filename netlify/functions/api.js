@@ -888,7 +888,7 @@ async function handleSmartBotDemo(body) {
     };
   }
 
-  if (session.last_message === "session_started" && session.step === "category" && !cart.length && !hasOrderIntent(text, products)) {
+  if (session.last_message === "session_started" && session.step === "category" && !cart.length && isGreeting(text) && !hasOrderIntent(text, products)) {
     session.last_message = text;
     await saveBotSession({ ...session, state, cart });
     return { session_id: session.id, step: session.step, reply: botWelcomeText(settings, categories) };
