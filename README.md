@@ -7,7 +7,7 @@ Sistema demo para hamburgueseria con pagina publica, panel administrador, base S
 - Web publica: `/`
 - Panel administrador: `/admin`
 - Bot demo/test: `/bot`
-- API Netlify: `/api/*`
+- API: `/api/*`
 
 ## Supabase
 
@@ -24,7 +24,19 @@ Tablas creadas:
 - `settings`
 - `bot_sessions`
 
-## Variables de entorno en Netlify
+## Hosting recomendado
+
+Para produccion no conviene depender de un plan gratis con corte duro. Netlify Free puede pausar el sitio cuando llega al limite mensual, dejando tambien sin funcionar `/admin` y el webhook de WhatsApp.
+
+Opciones:
+
+- Rapido: pasar a Netlify pago y activar auto recharge para que no pause el sitio.
+- Recomendado para este proyecto: desplegar tambien en Vercel o Cloudflare Workers/Pages con plan pago bajo y monitoreo.
+- Mas robusto: VPS propio con Node + Supabase si el comercio ya maneja muchos pedidos y quiere costo fijo.
+
+El proyecto queda compatible con Netlify y Vercel. En cualquier hosting, configurar las mismas variables de entorno.
+
+## Variables de entorno
 
 Configurar:
 
@@ -40,8 +52,8 @@ WHATSAPP_ADMIN_NUMBERS=5491162588633
 WHATSAPP_LOCAL_NOTIFY_NUMBER=5491162588633
 ```
 
-No poner `SUPABASE_SERVICE_ROLE_KEY` en frontend. Solo se usa en Netlify Functions.
-Tampoco exponer `WHATSAPP_ACCESS_TOKEN`: solo se usa en Netlify Functions.
+No poner `SUPABASE_SERVICE_ROLE_KEY` en frontend. Solo se usa en funciones serverless.
+Tampoco exponer `WHATSAPP_ACCESS_TOKEN`: solo se usa en funciones serverless.
 
 ## Desarrollo local
 
@@ -86,7 +98,7 @@ El bot de WhatsApp usa el mismo motor que `/bot` y la misma base de datos Supaba
 Webhook para configurar en Meta:
 
 ```txt
-https://tradyburger.netlify.app/api/whatsapp/webhook
+https://TU-DOMINIO/api/whatsapp/webhook
 ```
 
 El `Verify token` debe ser el mismo valor que `WHATSAPP_VERIFY_TOKEN` en Netlify.
