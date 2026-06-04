@@ -447,7 +447,7 @@ function findProduct(text, products, category) {
   if (!tokens.length) return null;
   const matches = scope
     .map((product) => ({ product, score: productScore(product, tokens) }))
-    .filter((item) => item.score > 0)
+    .filter((item) => item.score >= 4)
     .sort((a, b) => b.score - a.score || a.product.name.length - b.product.name.length);
   return matches[0]?.product || null;
 }
