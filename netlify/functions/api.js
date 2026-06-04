@@ -156,6 +156,20 @@ function textTokens(value = "") {
   return normalizeText(value).split(" ").filter((token) => token.length > 1);
 }
 
+function expandCommonFoodTypos(text = "") {
+  const normalized = normalizeText(text);
+  const replacements = [
+    [/\b(nuget|nuguet|nugget|nuggets|nuguets|nuges|nugets)\b/g, "nuggets"],
+    [/\b(ches|chees|cheese|chesse|chese)\b/g, "chesse"],
+    [/\b(amburguesa|amburgesa|hamburgesa|hamburguesa|burga|burger)\b/g, "hamburguesa"],
+    [/\b(papa|papas|frita|fritas)\b/g, "papas"],
+    [/\b(coca|cocacola|cocaa)\b/g, "coca"],
+    [/\b(chedar|chedar|chedder|cheddar)\b/g, "cheddar"],
+    [/\b(mila|milanesa|milanga)\b/g, "milanesa"]
+  ];
+  return replacements.reduce((value, [pattern, replacement]) => value.replace(pattern, replacement), normalized);
+}
+
 function parseYesNo(text) {
   const normalized = normalizeText(text);
   if (/^(si|s|dale|ok|oka|confirmo|confirmar|mandalo|listo|de una)\b/.test(normalized)) return true;
@@ -224,11 +238,46 @@ function formatDeliveryAddress(state = {}) {
   return parts.join(" | ");
 }
 
+function editDistance(a = "", b = "") {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = Array(b.length + 1);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        current[j - 1] + 1,
+        previous[j] + 1,
+        previous[j - 1] + cost
+      );
+    }
+    previous.splice(0, previous.length, ...current);
+  }
+
+  return previous[b.length];
+}
+
+function tokenLooksLike(token, candidate) {
+  if (!token || !candidate) return false;
+  if (candidate.includes(token) || token.includes(candidate)) return true;
+  if (token.length < 4 || candidate.length < 4) return false;
+  const distance = editDistance(token, candidate);
+  const allowed = Math.max(1, Math.floor(Math.min(token.length, candidate.length) / 4));
+  return distance <= allowed;
+}
+
 function productScore(product, tokens) {
   const name = normalizeText(product.name);
   const description = normalizeText(product.description || "");
+  const searchableTokens = textTokens(`${product.name} ${product.description || ""}`);
   return tokens.reduce((score, token) => {
     if (name.includes(token)) return score + 4;
+    if (searchableTokens.some((candidate) => tokenLooksLike(token, candidate))) return score + 3;
     if (token.length >= 4 && description.includes(token)) return score + 1;
     return score;
   }, 0);
@@ -237,12 +286,28 @@ function productScore(product, tokens) {
 function findCategory(text, categories) {
   const numeric = Number.parseInt(text, 10);
   if (Number.isFinite(numeric) && categories[numeric - 1]) return categories[numeric - 1];
-  const normalized = normalizeText(text);
+  const normalized = expandCommonFoodTypos(text);
   if (!normalized) return null;
-  return categories.find((category) => {
+  const exact = categories.find((category) => {
     const categoryName = normalizeText(category.name);
     return categoryName.includes(normalized) || normalized.includes(categoryName);
   });
+  if (exact) return exact;
+
+  const tokens = textTokens(expandCommonFoodTypos(text));
+  return categories.find((category) => {
+    const categoryTokens = textTokens(category.name);
+    return tokens.some((token) => categoryTokens.some((candidate) => tokenLooksLike(token, candidate)));
+  });
+}
+
+function isExactCategoryMatch(text, category, categories) {
+  if (!category) return false;
+  const numeric = Number.parseInt(text, 10);
+  if (Number.isFinite(numeric) && categories[numeric - 1]?.name === category.name) return true;
+  const normalized = expandCommonFoodTypos(text.replace(/^ver\s+/, ""));
+  const categoryName = normalizeText(category.name);
+  return categoryName.includes(normalized) || normalized.includes(categoryName);
 }
 
 function findProduct(text, products, category) {
@@ -278,9 +343,16 @@ function findProduct(text, products, category) {
     "dos",
     "tres",
     "cuatro",
-    "cinco"
+    "cinco",
+    "unidad",
+    "unidades",
+    "hamburguesa",
+    "hamburgesa",
+    "amburguesa",
+    "hamburguesas",
+    "amburguesas"
   ]);
-  const tokens = textTokens(text).filter((token) => !ignored.has(token));
+  const tokens = textTokens(expandCommonFoodTypos(text)).filter((token) => !ignored.has(token));
   if (!tokens.length) return null;
   const matches = scope
     .map((product) => ({ product, score: productScore(product, tokens) }))
@@ -702,10 +774,23 @@ async function handleSmartBotDemo(body) {
     const isPlainNumber = /^\d+$/.test(normalized);
     const directProduct = isPlainNumber ? null : findProduct(text, products);
     const category = findCategory(text.replace(/^ver\s+/, ""), categories);
-    if (category) {
+    const exactCategory = isExactCategoryMatch(text, category, categories);
+    if (directProduct && category && !exactCategory) {
+      const quantity = parseQuantity(text);
+      addToCart(cart, directProduct, quantity);
+      session.step = "more";
+      reply = `Buenisimo, sume ${quantity} x ${directProduct.name}.\n\n${botCartSummary(cart)}\n\nQueres agregar algo mas? Podes pedirlo directo o responder "no" para cerrar.`;
+    } else if (category) {
       state.category = category.name;
-      session.step = "product";
-      reply = `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
+      if (category.items.length === 1) {
+        const product = category.items[0];
+        state.pending_product_id = product.id;
+        session.step = "quantity";
+        reply = `Categoria: ${category.name}.\nTenemos ${product.name} (${money(product.price)}).\nCuantas unidades queres?`;
+      } else {
+        session.step = "product";
+        reply = `Categoria: ${category.name}. Elegi el producto por numero o por nombre:\n\n${botProductText(category)}\n\nCuando elijas el producto, te pregunto la cantidad.`;
+      }
     } else if (directProduct) {
       const quantity = parseQuantity(text);
       addToCart(cart, directProduct, quantity);
