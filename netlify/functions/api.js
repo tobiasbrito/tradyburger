@@ -928,15 +928,19 @@ async function handleSmartBotDemo(body) {
     reply = `Te doy una mano:\n- Escribi una categoria: "bebidas", "dobles", "nuggets"\n- Pedi directo: "2 chesse simple" o "una coca"\n- Escribi "carrito" para ver tu pedido\n- Escribi "menu" para volver al menu\n- Escribi "cancelar" para empezar de cero`;
   } else if (["carrito", "pedido", "resumen"].includes(normalized)) {
     reply = `Asi va tu pedido:\n${botCartSummary(cart)}\n\n${cart.length ? "Si esta todo, escribi no para cerrar o pedi algo mas." : "Decime que queres sumar y lo busco."}`;
-  } else if (["cancelar", "cancela", "nuevo", "reiniciar", "empezar"].includes(normalized)) {
+  } else if (
+    ["cancelar", "cancela", "nuevo", "reiniciar", "empezar"].includes(normalized) ||
+    (isGreeting(text) && !hasOrderIntent(text, products))
+  ) {
     session.step = "category";
     session.state = {};
     session.cart = [];
     session.last_message = text;
     await saveBotSession(session);
-    return { session_id: session.id, step: session.step, reply: `Listo, arrancamos de cero.\n\nCategorias:\n${botMenuText(categories)}` };
-  } else if (isGreeting(text) && session.step === "category" && !cart.length && !hasOrderIntent(text, products)) {
-    reply = botWelcomeText(settings, categories);
+    const restartReply = isGreeting(text)
+      ? botWelcomeText(settings, categories)
+      : `Listo, arrancamos de cero.\n\nCategorias:\n${botMenuText(categories)}`;
+    return { session_id: session.id, step: session.step, reply: restartReply };
   } else if (normalized === "menu" || normalized === "ver menu") {
     session.step = "category";
     reply = `Dale, volvemos al menu.\n\nCategorias:\n${botMenuText(categories)}`;
@@ -1115,7 +1119,10 @@ async function handleSmartBotDemo(body) {
       }
     }
   } else {
-    reply = "Esta sesion ya termino. Escribi nuevo y arrancamos otro pedido.";
+    session.step = "category";
+    session.state = {};
+    session.cart = [];
+    reply = `Arrancamos de nuevo.\n\nElegi una categoria por numero o por nombre:\n\n${botMenuText(categories)}`;
   }
 
   session.state = state;
