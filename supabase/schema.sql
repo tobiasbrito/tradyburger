@@ -23,6 +23,7 @@ create table if not exists public.orders (
   total integer not null check (total >= 0),
   status text not null default 'pendiente' check (status in ('pendiente', 'confirmado', 'preparado', 'entregado', 'cancelado')),
   delivery_driver text,
+  cashier_name text,
   notes text,
   created_at timestamptz not null default now()
 );

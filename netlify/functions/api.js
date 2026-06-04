@@ -102,7 +102,8 @@ function withOrderMeta(notes = "", patch = {}) {
   const meta = {
     ...current.meta,
     ...(patch.is_paid !== undefined ? { is_paid: Boolean(patch.is_paid) } : {}),
-    ...(patch.delivery_driver !== undefined ? { delivery_driver: patch.delivery_driver || "" } : {})
+    ...(patch.delivery_driver !== undefined ? { delivery_driver: patch.delivery_driver || "" } : {}),
+    ...(patch.cashier_name !== undefined ? { cashier_name: patch.cashier_name || "" } : {})
   };
   return `${current.cleanNotes || ""}\n\n[admin_meta:${JSON.stringify(meta)}]`;
 }
@@ -113,7 +114,8 @@ function decorateOrder(order) {
     ...order,
     notes: cleanNotes,
     is_paid: order.is_paid !== undefined && order.is_paid !== null ? Boolean(order.is_paid) : Boolean(meta.is_paid),
-    delivery_driver: order.delivery_driver !== undefined && order.delivery_driver !== null ? order.delivery_driver : meta.delivery_driver || ""
+    delivery_driver: order.delivery_driver !== undefined && order.delivery_driver !== null ? order.delivery_driver : meta.delivery_driver || "",
+    cashier_name: order.cashier_name !== undefined && order.cashier_name !== null ? order.cashier_name : meta.cashier_name || ""
   };
 }
 
@@ -134,7 +136,8 @@ function withSettingsMeta(settings, patch = {}) {
   const current = parseSettingsMeta(settings.opening_hours || "");
   const meta = {
     ...current.meta,
-    ...(patch.delivery_drivers !== undefined ? { delivery_drivers: patch.delivery_drivers } : {})
+    ...(patch.delivery_drivers !== undefined ? { delivery_drivers: patch.delivery_drivers } : {}),
+    ...(patch.cashiers !== undefined ? { cashiers: patch.cashiers } : {})
   };
   return `${current.cleanOpeningHours || ""}\n\n[settings_meta:${JSON.stringify(meta)}]`;
 }
@@ -144,7 +147,8 @@ function decorateSettings(settings) {
   return {
     ...settings,
     opening_hours: current.cleanOpeningHours,
-    delivery_drivers: Array.isArray(current.meta.delivery_drivers) ? current.meta.delivery_drivers : []
+    delivery_drivers: Array.isArray(current.meta.delivery_drivers) ? current.meta.delivery_drivers : [],
+    cashiers: Array.isArray(current.meta.cashiers) ? current.meta.cashiers : []
   };
 }
 
@@ -189,7 +193,8 @@ async function getSettings() {
     opening_hours: "Lunes a Domingo 20hs a 23:45hs",
     delivery_enabled: true,
     delivery_cost: 0,
-    delivery_drivers: []
+    delivery_drivers: [],
+    cashiers: []
   };
   return rows[0] ? decorateSettings(rows[0]) : fallback;
 }
@@ -1144,11 +1149,16 @@ exports.handler = async (event) => {
       const drivers = Array.isArray(body.delivery_drivers)
         ? body.delivery_drivers.map((item) => String(item || "").trim()).filter(Boolean)
         : undefined;
+      const cashiers = Array.isArray(body.cashiers)
+        ? body.cashiers.map((item) => String(item || "").trim()).filter(Boolean)
+        : undefined;
       const settings = await supabase("settings", {
         method: "PATCH",
         query: `id=eq.${encodeURIComponent(current.id)}`,
         body: {
-          ...(drivers !== undefined ? { opening_hours: withSettingsMeta(current, { delivery_drivers: drivers }) } : {})
+          ...(drivers !== undefined || cashiers !== undefined
+            ? { opening_hours: withSettingsMeta(current, { delivery_drivers: drivers, cashiers }) }
+            : {})
         }
       });
       return response(200, decorateSettings(settings[0]));
@@ -1212,7 +1222,8 @@ exports.handler = async (event) => {
       const patch = {
         ...(body.status !== undefined ? { status: body.status } : {}),
         ...(body.is_paid !== undefined ? { is_paid: Boolean(body.is_paid) } : {}),
-        ...(body.delivery_driver !== undefined ? { delivery_driver: body.delivery_driver || "" } : {})
+        ...(body.delivery_driver !== undefined ? { delivery_driver: body.delivery_driver || "" } : {}),
+        ...(body.cashier_name !== undefined ? { cashier_name: body.cashier_name || "" } : {})
       };
 
       try {
@@ -1223,7 +1234,7 @@ exports.handler = async (event) => {
         });
         return response(200, decorateOrder(order[0]));
       } catch (error) {
-        if (body.is_paid === undefined && body.delivery_driver === undefined) throw error;
+        if (body.is_paid === undefined && body.delivery_driver === undefined && body.cashier_name === undefined) throw error;
         const current = (await supabase("orders", { query: `select=*&id=eq.${encodeURIComponent(id)}&limit=1` }))[0];
         const fallbackPatch = {
           ...(body.status !== undefined ? { status: body.status } : {}),

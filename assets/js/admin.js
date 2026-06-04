@@ -10,6 +10,8 @@ const dashboardStats = document.getElementById("dashboardStats");
 const dashboardLists = document.getElementById("dashboardLists");
 const driversForm = document.getElementById("driversForm");
 const driversList = document.getElementById("driversList");
+const cashiersForm = document.getElementById("cashiersForm");
+const cashiersList = document.getElementById("cashiersList");
 const businessName = document.getElementById("businessName");
 const modeBadge = document.getElementById("modeBadge");
 const imagePickerButton = document.getElementById("imagePickerButton");
@@ -23,6 +25,7 @@ let products = [];
 let orders = [];
 let settings = {};
 let driverOptions = [];
+let cashierOptions = [];
 
 function currentImageUrl() {
   return productForm.elements.image_url.value.trim() || fallbackImage;
@@ -105,12 +108,24 @@ function renderDashboardPanel() {
   const activeOrders = orders.filter((order) => !["entregado", "cancelado"].includes(order.status));
   const pendingDelivery = orders.filter((order) => order.delivery_type === "envio" && !order.delivery_driver && !["entregado", "cancelado"].includes(order.status));
   const unpaid = orders.filter((order) => !order.is_paid && order.status !== "cancelado");
+  const withoutCashier = orders.filter((order) => !order.cashier_name && order.status !== "cancelado");
+  const counterOrders = todays.filter((order) => order.delivery_type === "retiro" && order.cashier_name);
   const revenueToday = todays.filter((order) => order.status !== "cancelado").reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const byCashier = cashierOptions.map((cashier) => ({
+    name: cashier,
+    count: todays.filter((order) => order.cashier_name === cashier && order.status !== "cancelado").length,
+    total: todays
+      .filter((order) => order.cashier_name === cashier && order.status !== "cancelado")
+      .reduce((sum, order) => sum + Number(order.total || 0), 0)
+  })).filter((item) => item.count > 0);
+
   dashboardStats.innerHTML = [
     ["Pedidos hoy", todays.length],
     ["Facturacion hoy", money(revenueToday)],
     ["Activos", activeOrders.length],
     ["Sin repartidor", pendingDelivery.length],
+    ["Sin cajero/a", withoutCashier.length],
+    ["Mostrador hoy", counterOrders.length],
     ["Sin cobrar", unpaid.length],
     ["Productos activos", products.filter((product) => product.is_active !== false).length]
   ].map(([label, value]) => `
@@ -125,7 +140,7 @@ function renderDashboardPanel() {
       <h2>Pedidos activos</h2>
       ${activeOrders.length ? activeOrders.slice(0, 6).map((order) => `
         <div class="ops-line">
-          <span>${order.customer_name} · ${order.delivery_type === "envio" ? "Envio" : "Retiro"}</span>
+          <span>${order.customer_name} - ${order.delivery_type === "envio" ? "Envio" : "Retiro"}</span>
           <strong>${money(order.total || 0)}</strong>
         </div>
       `).join("") : "<p>No hay pedidos activos.</p>"}
@@ -134,16 +149,34 @@ function renderDashboardPanel() {
       <h2>Repartidores</h2>
       ${driverOptions.length ? driverOptions.map((driver) => `<span class="driver-chip">${driver}</span>`).join("") : "<p>Todavia no cargaste repartidores.</p>"}
     </article>
+    <article class="ops-card">
+      <h2>Cajeros/as</h2>
+      ${cashierOptions.length ? cashierOptions.map((cashier) => `<span class="driver-chip">${cashier}</span>`).join("") : "<p>Todavia no cargaste cajeros/as.</p>"}
+    </article>
+    <article class="ops-card">
+      <h2>Ventas por cajero/a hoy</h2>
+      ${byCashier.length ? byCashier.map((item) => `
+        <div class="ops-line">
+          <span>${item.name} - ${item.count} pedido${item.count === 1 ? "" : "s"}</span>
+          <strong>${money(item.total)}</strong>
+        </div>
+      `).join("") : "<p>Todavia no hay pedidos de mostrador asignados hoy.</p>"}
+    </article>
   `;
 }
 
-function renderDrivers() {
-  driversList.innerHTML = driverOptions.length ? driverOptions.map((driver) => `
+function renderStaffList(target, items, removeAttribute, emptyText) {
+  target.innerHTML = items.length ? items.map((item) => `
     <li>
-      <span>${driver}</span>
-      <button class="secondary" type="button" data-remove-driver="${driver}">Sacar</button>
+      <span>${item}</span>
+      <button class="secondary" type="button" ${removeAttribute}="${item}">Sacar</button>
     </li>
-  `).join("") : `<li><span>No hay repartidores cargados.</span></li>`;
+  `).join("") : `<li><span>${emptyText}</span></li>`;
+}
+
+function renderStaff() {
+  renderStaffList(driversList, driverOptions, "data-remove-driver", "No hay repartidores cargados.");
+  renderStaffList(cashiersList, cashierOptions, "data-remove-cashier", "No hay cajeros/as cargados.");
 }
 
 function renderOrders() {
@@ -177,9 +210,16 @@ function renderOrders() {
           `).join("")}
         </select>
       </td>
+      <td>
+        <select data-order-field="cashier_name" data-order-id="${order.id}">
+          ${["", ...cashierOptions].map((cashier) => `
+            <option value="${cashier}" ${(order.cashier_name || "") === cashier ? "selected" : ""}>${cashier || "Sin asignar"}</option>
+          `).join("")}
+        </select>
+      </td>
       <td>${order.created_at ? new Date(order.created_at).toLocaleString("es-AR") : ""}</td>
     </tr>
-  `).join("") : `<tr><td colspan="7">Todavia no hay pedidos.</td></tr>`;
+  `).join("") : `<tr><td colspan="8">Todavia no hay pedidos.</td></tr>`;
 }
 
 async function load() {
@@ -188,11 +228,12 @@ async function load() {
   orders = data.orders;
   settings = data.settings || {};
   driverOptions = Array.isArray(settings.delivery_drivers) ? settings.delivery_drivers : [];
+  cashierOptions = Array.isArray(settings.cashiers) ? settings.cashiers : [];
   businessName.textContent = settings.business_name || "Tradi Burgerrr";
   modeBadge.textContent = data.mode === "supabase" ? "Conectado a Supabase" : "Modo demo local";
   renderDashboardPanel();
   renderProducts();
-  renderDrivers();
+  renderStaff();
   renderOrders();
   showDashboard();
 }
@@ -223,7 +264,7 @@ imageFileInput.addEventListener("change", async () => {
   const file = imageFileInput.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
-    alert("Elegí un archivo de imagen.");
+    alert("Elegi un archivo de imagen.");
     imageFileInput.value = "";
     return;
   }
@@ -233,7 +274,7 @@ imageFileInput.addEventListener("change", async () => {
     productForm.elements.image_url.value = dataUrl;
     updateImagePreview(dataUrl);
   } catch (error) {
-    alert("No pude cargar esa imagen. Probá con otra foto.");
+    alert("No pude cargar esa imagen. Proba con otra foto.");
   } finally {
     imagePickerButton.disabled = false;
   }
@@ -281,7 +322,7 @@ ordersTable.addEventListener("change", async (event) => {
 
 driversForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const input = driversForm.elements.driver_name;
+  const input = driversForm.elements.staff_name;
   const name = String(input.value || "").trim();
   if (!name) return;
   const normalized = name.toLowerCase();
@@ -292,11 +333,32 @@ driversForm.addEventListener("submit", async (event) => {
   await load();
 });
 
+cashiersForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = cashiersForm.elements.staff_name;
+  const name = String(input.value || "").trim();
+  if (!name) return;
+  const normalized = name.toLowerCase();
+  if (!cashierOptions.some((cashier) => cashier.toLowerCase() === normalized)) {
+    await saveSettings({ cashiers: [...cashierOptions, name] }, adminPassword);
+  }
+  input.value = "";
+  await load();
+});
+
 driversList.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-remove-driver]");
   if (!button) return;
   const nextDrivers = driverOptions.filter((driver) => driver !== button.dataset.removeDriver);
   await saveSettings({ delivery_drivers: nextDrivers }, adminPassword);
+  await load();
+});
+
+cashiersList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-remove-cashier]");
+  if (!button) return;
+  const nextCashiers = cashierOptions.filter((cashier) => cashier !== button.dataset.removeCashier);
+  await saveSettings({ cashiers: nextCashiers }, adminPassword);
   await load();
 });
 

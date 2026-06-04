@@ -30,17 +30,17 @@
       </header>
 
       <nav class="tabs">
-        <button class="active" type="button" data-tab="dashboardPanel">Dashboard</button>
-        <button type="button" data-tab="productsPanel">Productos</button>
+        <button class="active" type="button" data-tab="productsPanel">Productos</button>
         <button type="button" data-tab="ordersPanel">Pedidos</button>
+        <button type="button" data-tab="dashboardPanel">Dashboard</button>
       </nav>
 
-      <section class="tab-panel" id="dashboardPanel">
+      <section class="tab-panel hidden" id="dashboardPanel">
         <div class="metrics-grid" id="dashboardStats"></div>
         <div class="ops-grid" id="dashboardLists"></div>
       </section>
 
-      <section class="tab-panel hidden" id="productsPanel">
+      <section class="tab-panel" id="productsPanel">
         <form class="product-form" id="productForm">
           <input type="hidden" name="id">
           <label>Nombre
@@ -89,13 +89,22 @@
       </section>
 
       <section class="tab-panel hidden" id="ordersPanel">
-        <form class="drivers-form" id="driversForm">
-          <label>Agregar repartidor
-            <input name="driver_name" placeholder="Nombre del repartidor">
-          </label>
-          <button type="submit">Agregar</button>
-          <ul class="drivers-list" id="driversList"></ul>
-        </form>
+        <div class="staff-tools">
+          <form class="staff-form" id="driversForm">
+            <label>Agregar repartidor
+              <input name="staff_name" placeholder="Nombre del repartidor">
+            </label>
+            <button type="submit">Agregar</button>
+            <ul class="staff-list" id="driversList"></ul>
+          </form>
+          <form class="staff-form" id="cashiersForm">
+            <label>Agregar cajero/a
+              <input name="staff_name" placeholder="Nombre de quien toma pedidos">
+            </label>
+            <button type="submit">Agregar</button>
+            <ul class="staff-list" id="cashiersList"></ul>
+          </form>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -106,6 +115,7 @@
                 <th>Pago</th>
                 <th>Estado</th>
                 <th>Repartidor</th>
+                <th>Tomado por</th>
                 <th>Fecha</th>
               </tr>
             </thead>

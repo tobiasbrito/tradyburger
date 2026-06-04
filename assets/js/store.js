@@ -190,6 +190,7 @@ export async function createOrder(order) {
       total,
       status: "pendiente",
       delivery_driver: "",
+      cashier_name: "",
       notes: order.notes || "",
       created_at: new Date().toISOString(),
       items

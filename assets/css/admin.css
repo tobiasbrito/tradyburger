@@ -165,7 +165,7 @@ button.secondary {
 
 .metric-card,
 .ops-card,
-.drivers-form {
+.staff-form {
   border: 1px solid rgba(255, 229, 0, .22);
   border-radius: 8px;
   background: rgba(0, 0, 0, .26);
@@ -270,15 +270,22 @@ button.secondary {
   align-items: end;
 }
 
-.drivers-form {
+.staff-tools {
   display: grid;
-  grid-template-columns: minmax(220px, 360px) auto 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.staff-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
   gap: 12px;
   align-items: end;
   padding: 14px;
 }
 
-.drivers-list {
+.staff-list {
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -288,7 +295,7 @@ button.secondary {
   list-style: none;
 }
 
-.drivers-list li {
+.staff-list li {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -298,7 +305,7 @@ button.secondary {
   background: rgba(255, 255, 255, .06);
 }
 
-.drivers-list button {
+.staff-list button {
   min-height: 32px;
   border-radius: 999px;
   padding: 6px 10px;
@@ -312,7 +319,7 @@ button.secondary {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  min-width: 1120px;
 }
 
 th,
@@ -418,7 +425,8 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .drivers-form {
+  .staff-tools,
+  .staff-form {
     grid-template-columns: 1fr;
   }
 }
