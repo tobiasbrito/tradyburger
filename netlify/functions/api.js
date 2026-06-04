@@ -137,7 +137,8 @@ function withSettingsMeta(settings, patch = {}) {
   const meta = {
     ...current.meta,
     ...(patch.delivery_drivers !== undefined ? { delivery_drivers: patch.delivery_drivers } : {}),
-    ...(patch.cashiers !== undefined ? { cashiers: patch.cashiers } : {})
+    ...(patch.cashiers !== undefined ? { cashiers: patch.cashiers } : {}),
+    ...(patch.orders_cleared_at !== undefined ? { orders_cleared_at: patch.orders_cleared_at || "" } : {})
   };
   return `${current.cleanOpeningHours || ""}\n\n[settings_meta:${JSON.stringify(meta)}]`;
 }
@@ -148,7 +149,8 @@ function decorateSettings(settings) {
     ...settings,
     opening_hours: current.cleanOpeningHours,
     delivery_drivers: Array.isArray(current.meta.delivery_drivers) ? current.meta.delivery_drivers : [],
-    cashiers: Array.isArray(current.meta.cashiers) ? current.meta.cashiers : []
+    cashiers: Array.isArray(current.meta.cashiers) ? current.meta.cashiers : [],
+    orders_cleared_at: current.meta.orders_cleared_at || ""
   };
 }
 
@@ -194,7 +196,8 @@ async function getSettings() {
     delivery_enabled: true,
     delivery_cost: 0,
     delivery_drivers: [],
-    cashiers: []
+    cashiers: [],
+    orders_cleared_at: ""
   };
   return rows[0] ? decorateSettings(rows[0]) : fallback;
 }
@@ -1152,12 +1155,15 @@ exports.handler = async (event) => {
       const cashiers = Array.isArray(body.cashiers)
         ? body.cashiers.map((item) => String(item || "").trim()).filter(Boolean)
         : undefined;
+      const ordersClearedAt = Object.prototype.hasOwnProperty.call(body, "orders_cleared_at")
+        ? String(body.orders_cleared_at || "")
+        : undefined;
       const settings = await supabase("settings", {
         method: "PATCH",
         query: `id=eq.${encodeURIComponent(current.id)}`,
         body: {
-          ...(drivers !== undefined || cashiers !== undefined
-            ? { opening_hours: withSettingsMeta(current, { delivery_drivers: drivers, cashiers }) }
+          ...(drivers !== undefined || cashiers !== undefined || ordersClearedAt !== undefined
+            ? { opening_hours: withSettingsMeta(current, { delivery_drivers: drivers, cashiers, orders_cleared_at: ordersClearedAt }) }
             : {})
         }
       });

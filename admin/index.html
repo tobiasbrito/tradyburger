@@ -36,6 +36,45 @@
       </nav>
 
       <section class="tab-panel hidden" id="dashboardPanel">
+        <form class="dashboard-filters" id="dashboardFilters">
+          <label>Desde
+            <input name="from" type="date">
+          </label>
+          <label>Hasta
+            <input name="to" type="date">
+          </label>
+          <label>Estado
+            <select name="status">
+              <option value="">Todos</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="preparado">Preparado</option>
+              <option value="entregado">Entregado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </label>
+          <label>Entrega
+            <select name="delivery">
+              <option value="">Todas</option>
+              <option value="envio">Envio</option>
+              <option value="retiro">Retiro</option>
+            </select>
+          </label>
+          <label>Pago
+            <select name="paid">
+              <option value="">Todos</option>
+              <option value="true">Pago</option>
+              <option value="false">No pago</option>
+            </select>
+          </label>
+          <label>Repartidor
+            <select name="driver" id="dashboardDriverFilter"></select>
+          </label>
+          <label>Cajero/a
+            <select name="cashier" id="dashboardCashierFilter"></select>
+          </label>
+          <button class="secondary" type="button" id="resetDashboardFilters">Reset</button>
+        </form>
         <div class="metrics-grid" id="dashboardStats"></div>
         <div class="ops-grid" id="dashboardLists"></div>
       </section>
@@ -89,6 +128,13 @@
       </section>
 
       <section class="tab-panel hidden" id="ordersPanel">
+        <div class="orders-actions">
+          <div>
+            <strong>Bandeja de pedidos</strong>
+            <p>Limpiar deja esta lista en blanco, pero conserva el historial para el dashboard.</p>
+          </div>
+          <button class="danger" type="button" id="clearOrdersButton">Limpiar lista</button>
+        </div>
         <div class="staff-tools">
           <form class="staff-form" id="driversForm">
             <label>Agregar repartidor
@@ -125,6 +171,10 @@
       </section>
     </section>
   </main>
+  <div class="order-toast hidden" id="orderToast" role="status" aria-live="polite">
+    <strong>Nuevo pedido</strong>
+    <span id="orderToastText">Se agrego un pedido nuevo.</span>
+  </div>
   <script type="module" src="../assets/js/admin.js"></script>
 </body>
 </html>

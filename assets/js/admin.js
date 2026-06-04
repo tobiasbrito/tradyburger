@@ -8,6 +8,13 @@ const productsTable = document.getElementById("productsTable");
 const ordersTable = document.getElementById("ordersTable");
 const dashboardStats = document.getElementById("dashboardStats");
 const dashboardLists = document.getElementById("dashboardLists");
+const dashboardFilters = document.getElementById("dashboardFilters");
+const dashboardDriverFilter = document.getElementById("dashboardDriverFilter");
+const dashboardCashierFilter = document.getElementById("dashboardCashierFilter");
+const resetDashboardFilters = document.getElementById("resetDashboardFilters");
+const clearOrdersButton = document.getElementById("clearOrdersButton");
+const orderToast = document.getElementById("orderToast");
+const orderToastText = document.getElementById("orderToastText");
 const driversForm = document.getElementById("driversForm");
 const driversList = document.getElementById("driversList");
 const cashiersForm = document.getElementById("cashiersForm");
@@ -26,6 +33,9 @@ let orders = [];
 let settings = {};
 let driverOptions = [];
 let cashierOptions = [];
+let knownOrderIds = new Set();
+let refreshTimer = null;
+let toastTimer = null;
 
 function currentImageUrl() {
   return productForm.elements.image_url.value.trim() || fallbackImage;
@@ -98,17 +108,56 @@ function renderProducts() {
   `).join("");
 }
 
-function todayOrders() {
+function visibleOrders() {
+  if (!settings.orders_cleared_at) return orders;
+  const cutoff = new Date(settings.orders_cleared_at).getTime();
+  return orders.filter((order) => !order.created_at || new Date(order.created_at).getTime() > cutoff);
+}
+
+function filteredDashboardOrders() {
+  const data = new FormData(dashboardFilters);
+  const from = data.get("from") ? new Date(`${data.get("from")}T00:00:00`) : null;
+  const to = data.get("to") ? new Date(`${data.get("to")}T23:59:59`) : null;
+  const status = data.get("status");
+  const delivery = data.get("delivery");
+  const paid = data.get("paid");
+  const driver = data.get("driver");
+  const cashier = data.get("cashier");
+
+  return orders.filter((order) => {
+    const created = order.created_at ? new Date(order.created_at) : null;
+    if (from && created && created < from) return false;
+    if (to && created && created > to) return false;
+    if (status && order.status !== status) return false;
+    if (delivery && order.delivery_type !== delivery) return false;
+    if (paid && String(Boolean(order.is_paid)) !== paid) return false;
+    if (driver && (order.delivery_driver || "") !== driver) return false;
+    if (cashier && (order.cashier_name || "") !== cashier) return false;
+    return true;
+  });
+}
+
+function todayOrders(source = orders) {
   const today = new Date().toLocaleDateString("es-AR");
-  return orders.filter((order) => order.created_at && new Date(order.created_at).toLocaleDateString("es-AR") === today);
+  return source.filter((order) => order.created_at && new Date(order.created_at).toLocaleDateString("es-AR") === today);
+}
+
+function renderDashboardFilterOptions() {
+  const driverValue = dashboardDriverFilter.value;
+  const cashierValue = dashboardCashierFilter.value;
+  dashboardDriverFilter.innerHTML = `<option value="">Todos</option>${driverOptions.map((driver) => `<option value="${driver}">${driver}</option>`).join("")}`;
+  dashboardCashierFilter.innerHTML = `<option value="">Todos</option>${cashierOptions.map((cashier) => `<option value="${cashier}">${cashier}</option>`).join("")}`;
+  dashboardDriverFilter.value = driverOptions.includes(driverValue) ? driverValue : "";
+  dashboardCashierFilter.value = cashierOptions.includes(cashierValue) ? cashierValue : "";
 }
 
 function renderDashboardPanel() {
-  const todays = todayOrders();
-  const activeOrders = orders.filter((order) => !["entregado", "cancelado"].includes(order.status));
-  const pendingDelivery = orders.filter((order) => order.delivery_type === "envio" && !order.delivery_driver && !["entregado", "cancelado"].includes(order.status));
-  const unpaid = orders.filter((order) => !order.is_paid && order.status !== "cancelado");
-  const withoutCashier = orders.filter((order) => !order.cashier_name && order.status !== "cancelado");
+  const dashboardOrders = filteredDashboardOrders();
+  const todays = todayOrders(dashboardOrders);
+  const activeOrders = dashboardOrders.filter((order) => !["entregado", "cancelado"].includes(order.status));
+  const pendingDelivery = dashboardOrders.filter((order) => order.delivery_type === "envio" && !order.delivery_driver && !["entregado", "cancelado"].includes(order.status));
+  const unpaid = dashboardOrders.filter((order) => !order.is_paid && order.status !== "cancelado");
+  const withoutCashier = dashboardOrders.filter((order) => !order.cashier_name && order.status !== "cancelado");
   const counterOrders = todays.filter((order) => order.delivery_type === "retiro" && order.cashier_name);
   const revenueToday = todays.filter((order) => order.status !== "cancelado").reduce((sum, order) => sum + Number(order.total || 0), 0);
   const byCashier = cashierOptions.map((cashier) => ({
@@ -120,6 +169,7 @@ function renderDashboardPanel() {
   })).filter((item) => item.count > 0);
 
   dashboardStats.innerHTML = [
+    ["Filtrados", dashboardOrders.length],
     ["Pedidos hoy", todays.length],
     ["Facturacion hoy", money(revenueToday)],
     ["Activos", activeOrders.length],
@@ -180,7 +230,8 @@ function renderStaff() {
 }
 
 function renderOrders() {
-  ordersTable.innerHTML = orders.length ? orders.map((order) => `
+  const list = visibleOrders();
+  ordersTable.innerHTML = list.length ? list.map((order) => `
     <tr class="order-row order-row--${order.status || "pendiente"}">
       <td>
         <strong>${order.delivery_type === "envio" ? "Envio" : "Retiro"}</strong>
@@ -219,23 +270,75 @@ function renderOrders() {
       </td>
       <td>${order.created_at ? new Date(order.created_at).toLocaleString("es-AR") : ""}</td>
     </tr>
-  `).join("") : `<tr><td colspan="8">Todavia no hay pedidos.</td></tr>`;
+  `).join("") : `<tr><td colspan="8">La bandeja esta limpia. Los pedidos anteriores siguen en el dashboard.</td></tr>`;
 }
 
 async function load() {
+  await refreshAdminData({ notify: false });
+  showDashboard();
+  knownOrderIds = new Set(orders.map((order) => order.id));
+  startLiveRefresh();
+}
+
+async function refreshAdminData({ notify = false } = {}) {
+  const previousIds = new Set(knownOrderIds);
   const data = await getAdminData(adminPassword);
   products = data.products;
   orders = data.orders;
   settings = data.settings || {};
   driverOptions = Array.isArray(settings.delivery_drivers) ? settings.delivery_drivers : [];
   cashierOptions = Array.isArray(settings.cashiers) ? settings.cashiers : [];
+  renderDashboardFilterOptions();
   businessName.textContent = settings.business_name || "Tradi Burgerrr";
   modeBadge.textContent = data.mode === "supabase" ? "Conectado a Supabase" : "Modo demo local";
   renderDashboardPanel();
   renderProducts();
   renderStaff();
   renderOrders();
-  showDashboard();
+  knownOrderIds = new Set(orders.map((order) => order.id));
+
+  const newOrders = orders.filter((order) => previousIds.size && !previousIds.has(order.id));
+  if (notify && newOrders.length) notifyNewOrder(newOrders[0], newOrders.length);
+}
+
+function startLiveRefresh() {
+  if (refreshTimer) return;
+  refreshTimer = setInterval(() => {
+    if (!adminPassword) return;
+    refreshAdminData({ notify: true }).catch(() => {});
+  }, 7000);
+}
+
+function notifyNewOrder(order, count = 1) {
+  const label = count > 1 ? `${count} pedidos nuevos` : `Pedido nuevo de ${order.customer_name || "cliente"}`;
+  orderToastText.textContent = `${label} - ${money(order.total || 0)}`;
+  orderToast.classList.remove("hidden");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => orderToast.classList.add("hidden"), 6500);
+  playNotificationSound();
+}
+
+function playNotificationSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const context = new AudioContext();
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.45);
+    gain.connect(context.destination);
+    [880, 1175].forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      oscillator.type = "sine";
+      oscillator.frequency.value = frequency;
+      oscillator.connect(gain);
+      oscillator.start(context.currentTime + index * 0.12);
+      oscillator.stop(context.currentTime + 0.28 + index * 0.12);
+    });
+  } catch {
+    // Browsers can block sound until the user interacts with the page.
+  }
 }
 
 loginForm.addEventListener("submit", async (event) => {
@@ -317,6 +420,26 @@ ordersTable.addEventListener("change", async (event) => {
   if (!select) return;
   const value = select.dataset.orderField === "is_paid" ? select.value === "true" : select.value;
   await updateOrder(select.dataset.orderId, { [select.dataset.orderField]: value }, adminPassword);
+  await load();
+});
+
+dashboardFilters.addEventListener("input", () => {
+  renderDashboardPanel();
+});
+
+dashboardFilters.addEventListener("change", () => {
+  renderDashboardPanel();
+});
+
+resetDashboardFilters.addEventListener("click", () => {
+  dashboardFilters.reset();
+  renderDashboardPanel();
+});
+
+clearOrdersButton.addEventListener("click", async () => {
+  const ok = confirm("Esto limpia la bandeja visible de pedidos. El historial sigue disponible en el dashboard. Continuar?");
+  if (!ok) return;
+  await saveSettings({ orders_cleared_at: new Date().toISOString() }, adminPassword);
   await load();
 });
 

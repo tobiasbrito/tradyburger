@@ -96,6 +96,11 @@ button.secondary {
   border: 1px solid rgba(255, 255, 255, .18);
 }
 
+button.danger {
+  color: white;
+  background: #c92822;
+}
+
 .dashboard {
   overflow: hidden;
 }
@@ -156,7 +161,7 @@ button.secondary {
 }
 
 .metrics-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .ops-grid {
@@ -219,6 +224,33 @@ button.secondary {
 }
 
 .product-form .wide { grid-column: span 4; }
+
+.dashboard-filters,
+.orders-actions {
+  border: 1px solid rgba(255, 229, 0, .22);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .26);
+}
+
+.dashboard-filters {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+}
+
+.orders-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+}
+
+.orders-actions strong {
+  color: var(--yellow);
+}
 
 .image-picker {
   grid-template-columns: minmax(180px, 260px) 1fr;
@@ -410,9 +442,30 @@ th {
   border-color: rgba(255, 59, 48, .58);
 }
 
+.order-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  width: min(340px, calc(100% - 40px));
+  border: 1px solid rgba(255, 229, 0, .46);
+  border-radius: 8px;
+  padding: 14px 16px;
+  color: white;
+  background: rgba(13, 11, 8, .96);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .5), 0 0 22px rgba(255, 229, 0, .24);
+}
+
+.order-toast strong {
+  color: var(--yellow);
+}
+
 @media (max-width: 780px) {
   .metrics-grid,
   .ops-grid,
+  .dashboard-filters,
   .product-form {
     grid-template-columns: 1fr;
   }
@@ -428,5 +481,10 @@ th {
   .staff-tools,
   .staff-form {
     grid-template-columns: 1fr;
+  }
+
+  .orders-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
